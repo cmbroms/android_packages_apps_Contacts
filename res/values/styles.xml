@@ -104,7 +104,7 @@
 
     <style name="ContactsActionBarTheme" parent="@android:style/Theme.Holo">
         <item name="android:textColorHint">#CCCCCC</item>
-        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textColor">@android:color/white</item>
         <item name="android:popupMenuStyle">@android:style/Widget.Holo.Light.PopupMenu</item>
         <item name="android:dropDownListViewStyle">@style/ListViewDropdownStyle</item>
     </style>
@@ -216,12 +216,12 @@
     <style name="GroupMembershipSizeTextAppearance" parent="@android:style/TextAppearance.Small"/>
 
     <style name="PeopleNavigationDropDownTextAppearance">
-        <item name="android:textColor">#333333</item>
+        <item name="android:textColor">#CFCFCF</item>
         <item name="android:textSize">18sp</item>
     </style>
 
     <style name="PeopleNavigationDropDownHeaderTextAppearance">
-        <item name="android:textColor">#cdffffff</item>
+        <item name="android:textColor">#DFDFDF</item>
         <item name="android:textSize">18sp</item>
     </style>
 
