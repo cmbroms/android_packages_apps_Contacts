@@ -20,8 +20,8 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_primary"
-    android:paddingLeft="16dip">
+    android:paddingLeft="16dip"
+    android:paddingStart="16dip">
 
     <!-- Placeholder for empty list -->
     <include
