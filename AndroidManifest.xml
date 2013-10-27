@@ -61,7 +61,7 @@
     >
 
         <!-- The main Contacts activity with the contact list, favorites, and groups. -->
-        <activity android:name=".activities.PeopleActivityCM"
+        <activity android:name=".activities.PeopleActivity"
             android:label="@string/people"
             android:theme="@style/PeopleTheme"
             android:uiOptions="splitActionBarWhenNarrow"
@@ -187,18 +187,18 @@
 
         <!-- Backwards compatibility: somebody may have hard coded this activity name -->
         <activity-alias android:name="ContactsListActivity"
-            android:targetActivity=".activities.PeopleActivityCM"
+            android:targetActivity=".activities.PeopleActivity"
         />
 
         <!-- Backwards compatibility: "Contacts" from Honeycomb -->
         <activity-alias android:name=".activities.ContactsFrontDoor"
-            android:targetActivity=".activities.PeopleActivityCM"
+            android:targetActivity=".activities.PeopleActivity"
             android:exported="true"
         />
 
         <!-- Backwards compatibility: "Contacts" from Gingerbread and earlier -->
         <activity-alias android:name="DialtactsContactsEntryActivity"
-            android:targetActivity=".activities.PeopleActivityCM"
+            android:targetActivity=".activities.PeopleActivity"
             android:exported="true"
         />
 
@@ -320,7 +320,7 @@
         <activity android:name=".activities.ContactDetailActivity"
             android:label="@string/viewContactTitle"
             android:theme="@style/DetailActivityTheme"
-            android:parentActivityName=".activities.PeopleActivityCM">
+            android:parentActivityName=".activities.PeopleActivity">
 
             <intent-filter android:label="@string/viewContactDesription">
                 <action android:name="android.intent.action.VIEW" />
