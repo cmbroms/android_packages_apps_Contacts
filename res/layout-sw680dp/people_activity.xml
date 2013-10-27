@@ -60,8 +60,7 @@
             android:id="@+id/contact_details_view"
             android:layout_width="0dip"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@color/background_primary"
+            android:layout_weight="2"
             android:visibility="gone">
 
             <!-- This layout includes all possible views needed for a contact detail page -->
@@ -91,8 +90,7 @@
             android:id="@+id/group_details_view"
             android:layout_width="0dip"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@color/background_primary"
+            android:layout_weight="2"
             android:visibility="gone">
 
             <!-- This is the group detail page -->

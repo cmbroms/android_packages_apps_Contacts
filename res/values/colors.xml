@@ -17,7 +17,7 @@
 
     <color name="quickcontact_list_divider">#ffcdcdcd</color>
     <color name="quickcontact_list_background">#ff000000</color>
-    <color name="quickcontact_tab_indicator">@*android:color/holo_blue_light</color>
+    <color name="quickcontact_tab_indicator">ff33b5e6</color>
 
     <!-- Color of the background of the contact detail and editor pages -->
     <color name="background_primary">#ff000000</color>
@@ -48,5 +48,4 @@
     <color name="photo_container">#4c090909</color>
     <color name="social_widget_bg">#00000000</color>
     <color name="white_text">#ffffffff</color>
-
 </resources>
