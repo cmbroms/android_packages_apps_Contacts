@@ -19,7 +19,7 @@
     <color name="quickcontact_list_background">#ff000000</color>
     <color name="quickcontact_tab_indicator">#ff33b5e6</color>
     <color name="quickcontact_track_background">#ff000000</color>
-    <color name="quickcontact_activity_background">#ff00000</color>
+    <color name="quickcontact_activity_background">#ff000000</color>
     <color name="quickcontact_name_detail_background">#66000000</color>
 
     <!-- Color of the background of the contact detail and editor pages -->
