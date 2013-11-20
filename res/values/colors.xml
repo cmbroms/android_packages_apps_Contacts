@@ -18,6 +18,9 @@
     <color name="quickcontact_list_divider">#ffcdcdcd</color>
     <color name="quickcontact_list_background">#ff000000</color>
     <color name="quickcontact_tab_indicator">#ff33b5e6</color>
+    <color name="quickcontact_track_background">#ff000000</color>
+    <color name="quickcontact_activity_background">#ff00000</color>
+    <color name="quickcontact_name_detail_background">#66000000</color>
 
     <!-- Color of the background of the contact detail and editor pages -->
     <color name="background_primary">#ff000000</color>
@@ -32,6 +35,12 @@
 
     <!-- Color of the text of the tab carousel in the contact details  -->
     <color name="detail_tab_carousel_tab_label_color">#ffeeeeee</color>
+
+    <!-- Color of the background of the action bar -->
+    <color name="action_bar_background">#5f5f5f</color>
+
+    <!-- Color of the background of the action bar when highlighted (ie. pressed, focused) -->
+    <color name="action_bar_background_highlight">#cecece</color>
 
     <!-- Color of the text for buttons in the action bar  -->
     <color name="action_bar_button_text_color">#ffffffff</color>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2010 The Android Open Source Project
+<!-- Copyright (C) 2013 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -14,13 +14,7 @@
      limitations under the License.
 -->
 
- <!-- It is enough to update once per day, as the widget watches the database for changes -->
- 
-<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="260dip"
-    android:minHeight="40dip"
-    android:updatePeriodMillis="86400000"
-    android:initialLayout="@layout/social_widget"
-    android:previewImage="@drawable/contacts_widget_preview"
-    android:configure="com.android.contacts.socialwidget.SocialWidgetConfigureActivity" >
-</appwidget-provider>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Offer access to files under Context.getCacheDir() -->
+    <cache-path name="my_cache" />
+</paths>
