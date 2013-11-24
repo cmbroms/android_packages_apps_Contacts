@@ -105,7 +105,7 @@
         <item name="android:src">@drawable/ic_overflow_menu</item>
     </style>
 
-    <style name="ContactsActionBarStyle" parent="@android:Widget.Holo.ActionBar">
+    <style name="ContactsActionBarStyle" parent="@android:Widget.Holo.ActionBar.Solid">
         <item name="android:background">@drawable/action_bar_tab</item>
         <item name="android:backgroundSplit">@drawable/action_bar_tab</item>
         <item name="android:backgroundStacked">@drawable/action_bar_tab</item>
@@ -116,7 +116,7 @@
         <item name="android:background">@drawable/ab_dropdown_navigation_item_background</item>
     </style>
 
-    <style name="ContactsActionBarTheme" parent="@android:style/Theme.Holo">
+    <style name="ContactsActionBarTheme" parent="@android:style/Theme.Holo.Light.DarkActionBar">
         <item name="android:textColorHint">#CCCCCC</item>
         <item name="android:textColor">@android:color/white</item>
         <item name="android:popupMenuStyle">@android:style/Widget.Holo.PopupMenu</item>
