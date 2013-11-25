@@ -17,7 +17,7 @@
 
     <color name="quickcontact_list_divider">#ffcdcdcd</color>
     <color name="quickcontact_list_background">#ff000000</color>
-    <color name="quickcontact_tab_indicator">#ff33b5e6</color>
+    <color name="quickcontact_tab_indicator">#ff33b5e5</color>
     <color name="quickcontact_track_background">#ff000000</color>
     <color name="quickcontact_activity_background">#ff000000</color>
     <color name="quickcontact_name_detail_background">#66000000</color>
@@ -40,7 +40,7 @@
     <color name="action_bar_background">#222222</color>
 
     <!-- Color of the background of the action bar when highlighted (ie. pressed, focused) -->
-    <color name="action_bar_background_highlight">#cecece</color>
+    <color name="action_bar_background_highlight">#33b5e5</color>
 
     <!-- Color of the text for buttons in the action bar  -->
     <color name="action_bar_button_text_color">#FFFFFF</color>
