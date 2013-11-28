@@ -15,7 +15,7 @@
 -->
 <resources>
 
-    <color name="quickcontact_list_divider">#ffff4d4d</color>
+    <color name="quickcontact_list_divider">#ffcdcdcd</color>
     <color name="quickcontact_list_background">#ff000000</color>
     <color name="quickcontact_tab_indicator">#ff33b5e5</color>
     <color name="quickcontact_track_background">#ff000000</color>
@@ -23,9 +23,9 @@
     <color name="quickcontact_name_detail_background">#66000000</color>
 
     <!-- Color of the background of the contact detail and editor pages -->
-    <color name="background_primary">#33b5e5</color>
+    <color name="background_primary">#000000</color>
 
-    <color name="background_social_updates">#ff33b5e5</color>
+    <color name="background_social_updates">#ff000000</color>
 
     <!-- Color used for the letter in the A-Z section header -->
     <color name="section_header_text_color">#ffffff</color>
@@ -34,7 +34,7 @@
     <color name="detail_update_tab_text_color">#ffffffff</color>
 
     <!-- Color of the text of the tab carousel in the contact details  -->
-    <color name="detail_tab_carousel_tab_label_color">#ffff4d4d</color>
+    <color name="detail_tab_carousel_tab_label_color">#ffeeeeee</color>
 
     <!-- Color of the background of the action bar -->
     <color name="action_bar_background">#524c4c</color>
@@ -54,7 +54,7 @@
     <color name="call_log_divider">#55ffffff</color>
     <color name="detail_tab_carousel_tab_label_background_color">#7f000000</color>
     <color name="photo_backdrop">#000000</color>
-    <color name="photo_container">#33b5e5</color>
+    <color name="photo_container">#4c090909</color>
     <color name="social_widget_bg">#00000000</color>
     <color name="white_text">#ffffffff</color>
 </resources>
