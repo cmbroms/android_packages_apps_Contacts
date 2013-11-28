@@ -15,7 +15,7 @@
 -->
 <resources>
 
-    <color name="quickcontact_list_divider">#ffcdcdcd</color>
+    <color name="quickcontact_list_divider">#ffff4d4d</color>
     <color name="quickcontact_list_background">#ff000000</color>
     <color name="quickcontact_tab_indicator">#ff33b5e5</color>
     <color name="quickcontact_track_background">#ff000000</color>
@@ -34,7 +34,7 @@
     <color name="detail_update_tab_text_color">#ffffffff</color>
 
     <!-- Color of the text of the tab carousel in the contact details  -->
-    <color name="detail_tab_carousel_tab_label_color">#ffeeeeee</color>
+    <color name="detail_tab_carousel_tab_label_color">#ffff4d4d</color>
 
     <!-- Color of the background of the action bar -->
     <color name="action_bar_background">#524c4c</color>
