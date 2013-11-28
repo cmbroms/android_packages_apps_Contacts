@@ -46,7 +46,7 @@
     <color name="action_bar_button_text_color">#FFFFFF</color>
 
     <!--  Color of the vertical stripe that goes on the left of a block quote inside a stream item -->
-    <color name="stream_item_stripe_color">#ff555555</color>
+    <color name="stream_item_stripe_color">#33b5e5</color>
 
     <!-- New Colors for Theme Chooser to be compatible -->
     <color name="account_container">#000000</color>
