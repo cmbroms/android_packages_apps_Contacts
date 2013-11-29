@@ -23,12 +23,12 @@
     <color name="quickcontact_name_detail_background">#66000000</color>
 
     <!-- Color of the background of the contact detail and editor pages -->
-    <color name="background_primary">#000000</color>
+    <color name="background_primary">#ff000000</color>
 
     <color name="background_social_updates">#ff000000</color>
 
     <!-- Color used for the letter in the A-Z section header -->
-    <color name="section_header_text_color">#ffffff</color>
+    <color name="section_header_text_color">#ffbfbfbf</color>
 
     <!-- Color of the text in the updates tab in the tab carousel on the contact detail page -->
     <color name="detail_update_tab_text_color">#ffffffff</color>
@@ -43,17 +43,17 @@
     <color name="action_bar_background_highlight">#33b5e5</color>
 
     <!-- Color of the text for buttons in the action bar  -->
-    <color name="action_bar_button_text_color">#FFFFFF</color>
+    <color name="action_bar_button_text_color">#ffffffff</color>
 
     <!--  Color of the vertical stripe that goes on the left of a block quote inside a stream item -->
-    <color name="stream_item_stripe_color">#33b5e5</color>
+    <color name="stream_item_stripe_color">#ff555555</color>
 
     <!-- New Colors for Theme Chooser to be compatible -->
-    <color name="account_container">#000000</color>
+    <color name="account_container">#ff222222</color>
     <color name="call_detail_photo_bg">#7f000000</color>
     <color name="call_log_divider">#55ffffff</color>
     <color name="detail_tab_carousel_tab_label_background_color">#7f000000</color>
-    <color name="photo_backdrop">#000000</color>
+    <color name="photo_backdrop">#ff000000</color>
     <color name="photo_container">#4c090909</color>
     <color name="social_widget_bg">#00000000</color>
     <color name="white_text">#ffffffff</color>
