@@ -37,7 +37,7 @@
     <color name="detail_tab_carousel_tab_label_color">#ffeeeeee</color>
 
     <!-- Color of the background of the action bar -->
-    <color name="action_bar_background">#524c4c</color>
+    <color name="action_bar_background">#33b5e5</color>
 
     <!-- Color of the background of the action bar when highlighted (ie. pressed, focused) -->
     <color name="action_bar_background_highlight">#33b5e5</color>
