@@ -37,7 +37,7 @@
     <color name="detail_tab_carousel_tab_label_color">#ffeeeeee</color>
 
     <!-- Color of the background of the action bar -->
-    <color name="action_bar_background">#ff33b5e5</color>
+    <color name="action_bar_background">#ff222222</color>
 
     <!-- Color of the background of the action bar when highlighted (ie. pressed, focused) -->
     <color name="action_bar_background_highlight">#ff000000</color>
@@ -49,7 +49,7 @@
     <color name="stream_item_stripe_color">#ff555555</color>
 
     <!-- New Colors for Theme Chooser to be compatible -->
-    <color name="account_container">#ff33b5e5</color>
+    <color name="account_container">#ff222222</color>
     <color name="call_detail_photo_bg">#7f000000</color>
     <color name="call_log_divider">#55ffffff</color>
     <color name="detail_tab_carousel_tab_label_background_color">#7f000000</color>
