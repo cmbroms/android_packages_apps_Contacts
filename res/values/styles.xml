@@ -219,7 +219,7 @@
     <style name="GroupMembershipSizeTextAppearance" parent="@android:style/TextAppearance.Small"/>
 
     <style name="PeopleNavigationDropDownTextAppearance">
-        <item name="android:textColor">#333333</item>
+        <item name="android:textColor">#ffffff</item>
         <item name="android:textSize">18sp</item>
     </style>
 
