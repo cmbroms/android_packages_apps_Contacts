@@ -14,8 +14,10 @@
      limitations under the License.
 -->
 <resources>
-    <style name="PeopleTheme" parent="@android:style/Theme.Holo">
+    <style name="PeopleTheme1" parent="@android:style/Theme.Holo.Light">
         <item name="android:actionBarStyle">@style/ContactsActionBarStyle</item>
+        <item name="android:homeAsUpIndicator">@drawable/ic_menu_back</item>
+        <item name="android:actionOverflowButtonStyle">@style/ContactsActionBarOverflow</item>
         <item name="android:actionBarWidgetTheme">@style/ContactsActionBarTheme</item>
         <item name="android:actionBarItemBackground">@drawable/action_bar_item_background</item>
         <item name="android:actionBarTabStyle">@style/ContactsActionBarTabView</item>
@@ -29,9 +31,9 @@
         <item name="activated_background">@drawable/list_item_activated_background</item>
         <item name="section_header_background">@drawable/list_title_holo</item>
         <item name="list_item_divider">?android:attr/listDivider</item>
-        <item name="list_item_padding_top">0dip</item>
+        <item name="list_item_padding_top">8dip</item>
         <item name="list_item_padding_right">12dip</item>
-        <item name="list_item_padding_bottom">0dip</item>
+        <item name="list_item_padding_bottom">8dip</item>
         <item name="list_item_padding_left">0dip</item>
         <item name="list_item_gap_between_image_and_text">8dip</item>
         <item name="list_item_gap_between_label_and_data">5dip</item>
@@ -43,12 +45,12 @@
         <item name="list_item_header_text_indent">8dip</item>
         <item name="list_item_header_text_size">14sp</item>
         <item name="list_item_header_text_color">@color/people_app_theme_color</item>
-        <item name="list_item_header_height">32dip</item>
+        <item name="list_item_header_height">30dip</item>
         <item name="list_item_header_underline_height">1dip</item>
-        <item name="list_item_header_underline_color">@color/people_app_theme_color</item>
+        <item name="list_item_header_underline_color">@color/secondary_header_separator_color</item>
         <item name="list_item_data_width_weight">5</item>
         <item name="list_item_label_width_weight">3</item>
-        <item name="list_item_contacts_count_text_color">@color/contact_count_text_color</item>
+        <item name="list_item_contacts_count_text_color">@color/people_app_theme_color</item>
         <item name="list_item_contacts_count_text_size">12sp</item>
         <item name="contact_browser_list_padding_left">0dip</item>
         <item name="contact_browser_list_padding_right">0dip</item>
@@ -58,15 +60,15 @@
         <item name="favorites_padding_bottom">0dip</item>
     </style>
 
-    <style name="ContactPickerTheme" parent="@android:Theme.Holo.Dialog">
+    <style name="ContactPickerTheme" parent="@android:Theme.Holo.Light.Dialog">
         <item name="android:windowSoftInputMode">adjustResize</item>
         <item name="android:listViewStyle">@style/ListViewStyle</item>
         <item name="list_item_height">?android:attr/listPreferredItemHeight</item>
         <item name="section_header_background">@drawable/list_title_holo</item>
         <item name="list_item_divider">?android:attr/listDivider</item>
-        <item name="list_item_padding_top">0dip</item>
+        <item name="list_item_padding_top">8dip</item>
         <item name="list_item_padding_right">0dip</item>
-        <item name="list_item_padding_bottom">0dip</item>
+        <item name="list_item_padding_bottom">8dip</item>
         <item name="list_item_padding_left">0dip</item>
         <item name="list_item_gap_between_image_and_text">8dip</item>
         <item name="list_item_gap_between_label_and_data">5dip</item>
@@ -75,19 +77,20 @@
         <item name="list_item_profile_photo_size">80dip</item>
         <item name="list_item_header_text_indent">8dip</item>
         <item name="list_item_header_text_size">14sp</item>
-        <item name="list_item_header_text_color">@color/people_app_theme_color</item>
-        <item name="list_item_header_height">24dip</item>
-        <item name="list_item_header_underline_height">1dip</item>
-        <item name="list_item_header_underline_color">@color/people_app_theme_color</item>
+        <item name="list_item_header_text_color">@color/dialtacts_secondary_text_color</item>
+        <item name="list_item_header_height">30dip</item>
+        <item name="list_item_header_underline_height">2dip</item>
+        <item name="list_item_header_underline_color">@color/secondary_header_separator_color</item>
         <item name="list_item_data_width_weight">5</item>
         <item name="list_item_label_width_weight">3</item>
-        <item name="list_item_contacts_count_text_color">@color/contact_count_text_color</item>
-        <item name="list_item_contacts_count_text_size">12sp</item>
+        <item name="list_item_contacts_count_text_color">@color/people_app_theme_color</item>
+        <item name="list_item_contacts_count_text_size">20sp</item>
         <item name="contact_browser_list_padding_left">24dip</item>
         <item name="contact_browser_list_padding_right">0dip</item>
         <item name="contact_browser_background">@android:color/transparent</item>
         <item name="list_item_text_indent">@dimen/contact_browser_list_item_text_indent</item>
     </style>
+
     <style name="ContactPickerLayout" parent="ContactPickerTheme">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
@@ -99,7 +102,7 @@
         <item name="android:windowSoftInputMode">adjustUnspecified</item>
     </style>
 
-    <style name="ContactListFilterTheme" parent="@android:Theme.Holo.Dialog">
+    <style name="ContactListFilterTheme" parent="@android:Theme.Holo.Light.Dialog">
         <item name="android:windowCloseOnTouchOutside">true</item>
         <item name="android:listViewStyle">@style/ListViewStyle</item>
     </style>
@@ -119,7 +122,7 @@
         <item name="android:background">@android:color/transparent</item>
     </style>
 
-    <style name="NonPhoneDialogTheme" parent="@android:Theme.Holo.Dialog">
+    <style name="NonPhoneDialogTheme" parent="@android:Theme.Holo.Light.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
@@ -134,7 +137,7 @@
         <item name="android:layout_height">200dip</item>
     </style>
 
-    <style name="BackgroundOnlyTheme" parent="@android:Theme.Holo">
+    <style name="BackgroundOnlyTheme" parent="@android:Theme.Holo.Light">
         <item name="android:windowBackground">@null</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowAnimationStyle">@null</item>
