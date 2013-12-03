@@ -119,7 +119,7 @@
         <item name="android:dropDownListViewStyle">@style/ListViewDropdownStyle</item>
     </style>
 
-    <style name="ContactsActionBarTabView" parent="@android:style/Widget.Holo.ActionBar.TabView">
+    <style name="ContactsActionBarTabView" parent="@android:style/Widget.Holo.ActionBar.Solid">
         <item name="android:background">@drawable/action_bar_tab</item>
     </style>
 
