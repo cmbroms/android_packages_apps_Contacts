@@ -167,7 +167,7 @@
     </style>
 
     <style name="SectionDivider">
-        <item name="android:background">#ff33b5e5</item>
+        <item name="android:background">#7e7e87</item>
         <item name="android:layout_height">1dip</item>
         <item name="android:layout_width">match_parent</item>
     </style>
