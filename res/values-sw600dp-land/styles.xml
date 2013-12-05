@@ -53,7 +53,7 @@
         <item name="list_item_contacts_count_text_size">12sp</item>
         <item name="contact_browser_list_padding_left">0dip</item>
         <item name="contact_browser_list_padding_right">0dip</item>
-        <item name="contact_browser_background">#000000</item>
+        <item name="contact_browser_background">@color/blk_background</item>
         <item name="list_item_text_indent">@dimen/contact_browser_list_item_text_indent</item>
         <!-- Favorites -->
         <item name="favorites_padding_bottom">0dip</item>

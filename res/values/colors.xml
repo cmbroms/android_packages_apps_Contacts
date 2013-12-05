@@ -21,6 +21,7 @@
     <color name="quickcontact_track_background">#ff000000</color>
     <color name="quickcontact_activity_background">#ff000000</color>
     <color name="quickcontact_name_detail_background">#66000000</color>
+    <color name="blk_background">#000000</color>
 
     <!-- Color of the background of the contact detail and editor pages -->
     <color name="background_primary">#ff000000</color>
