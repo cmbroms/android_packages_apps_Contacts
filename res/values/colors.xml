@@ -15,7 +15,7 @@
 -->
 <resources>
 
-    <color name="quickcontact_list_divider">#ff33b5e5</color>
+    <color name="quickcontact_list_divider">#ffcdcdcd</color>
     <color name="quickcontact_tab_indicator">#ff222222</color>
     <color name="quickcontact_list_background">#000000</color>
     <color name="quickcontact_track_background">#ff000000</color>
