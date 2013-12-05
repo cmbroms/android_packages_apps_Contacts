@@ -93,8 +93,8 @@
         <item name="list_item_contacts_count_text_color">@color/contact_count_text_color</item>
         <item name="list_item_header_text_indent">8dip</item>
         <item name="contact_browser_list_padding_left">16dip</item>
-        <item name="contact_br owser_list_padding_right">0dip</item>
-        <item name="contact_browser_background">#000000</item>
+        <item name="contact_browser_list_padding_right">0dip</item>
+        <item name="contact_browser_background">@android:color/transparent</item>
         <item name="list_item_text_indent">@dimen/contact_browser_list_item_text_indent</item>
         <item name="list_item_contacts_count_text_size">12sp</item>
         <!-- Favorites -->
