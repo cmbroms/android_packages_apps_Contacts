@@ -26,6 +26,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.DisplayNameSources;
+import android.provider.ContactsContract.Preferences;
 import android.provider.ContactsContract.StreamItems;
 import android.text.Html;
 import android.text.Html.ImageGetter;
@@ -41,15 +42,15 @@ import android.widget.TextView;
 
 import com.android.contacts.common.ContactPhotoManager;
 import com.android.contacts.R;
-import com.android.contacts.model.Contact;
-import com.android.contacts.model.RawContact;
-import com.android.contacts.model.dataitem.DataItem;
-import com.android.contacts.model.dataitem.OrganizationDataItem;
+import com.android.contacts.common.model.Contact;
+import com.android.contacts.common.model.RawContact;
+import com.android.contacts.common.model.dataitem.DataItem;
+import com.android.contacts.common.model.dataitem.OrganizationDataItem;
 import com.android.contacts.common.preference.ContactsPreferences;
+import com.android.contacts.util.StreamItemEntry;
 import com.android.contacts.util.ContactBadgeUtil;
 import com.android.contacts.util.HtmlUtils;
 import com.android.contacts.util.MoreMath;
-import com.android.contacts.util.StreamItemEntry;
 import com.android.contacts.util.StreamItemPhotoEntry;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterables;
@@ -94,20 +95,19 @@ public class ContactDetailDisplayUtils {
      * Returns res/string/missing_name if there is no display name.
      */
     public static CharSequence getDisplayName(Context context, Contact contactData) {
-        CharSequence displayName = contactData.getDisplayName();
-        CharSequence altDisplayName = contactData.getAltDisplayName();
         ContactsPreferences prefs = new ContactsPreferences(context);
-        CharSequence styledName = "";
-        if (!TextUtils.isEmpty(displayName) && !TextUtils.isEmpty(altDisplayName)) {
-            if (prefs.getDisplayOrder() == ContactsContract.Preferences.DISPLAY_ORDER_PRIMARY) {
-                styledName = displayName;
-            } else {
-                styledName = altDisplayName;
+        final CharSequence displayName = contactData.getDisplayName();
+        if (prefs.getDisplayOrder() == Preferences.DISPLAY_ORDER_PRIMARY) {
+            if (!TextUtils.isEmpty(displayName)) {
+                return displayName;
             }
         } else {
-            styledName = context.getResources().getString(R.string.missing_name);
+            final CharSequence altDisplayName = contactData.getAltDisplayName();
+            if (!TextUtils.isEmpty(altDisplayName)) {
+                return altDisplayName;
+            }
         }
-        return styledName;
+        return context.getResources().getString(R.string.missing_name);
     }
 
     /**
@@ -129,9 +129,14 @@ public class ContactDetailDisplayUtils {
         if (contactData.isDirectoryEntry()) {
             String directoryDisplayName = contactData.getDirectoryDisplayName();
             String directoryType = contactData.getDirectoryType();
-            String displayName = !TextUtils.isEmpty(directoryDisplayName)
-                    ? directoryDisplayName
-                    : directoryType;
+            final String displayName;
+            if (!TextUtils.isEmpty(directoryDisplayName)) {
+                displayName = directoryDisplayName;
+            } else if (!TextUtils.isEmpty(directoryType)) {
+                displayName = directoryType;
+            } else {
+                return null;
+            }
             return context.getString(R.string.contact_directory_description, displayName);
         }
         return null;
@@ -207,8 +212,8 @@ public class ContactDetailDisplayUtils {
         if (!isDirectoryEntry && !isUserProfile) {
             starredMenuItem.setVisible(true);
             final int resId = isStarred
-                    ? R.drawable.btn_star_on_normal_holo_dark
-                    : R.drawable.btn_star_off_normal_holo_dark;
+                    ? R.drawable.btn_star_on_normal_holo_light
+                    : R.drawable.btn_star_off_normal_holo_light;
             starredMenuItem.setIcon(resId);
             starredMenuItem.setChecked(isStarred);
             starredMenuItem.setTitle(isStarred ? R.string.menu_removeStar : R.string.menu_addStar);
@@ -228,17 +233,6 @@ public class ContactDetailDisplayUtils {
 
         CharSequence snippet = null;
         String photoUri = null;
-        if (!contactData.getStreamItems().isEmpty()) {
-            StreamItemEntry firstEntry = contactData.getStreamItems().get(0);
-            snippet = HtmlUtils.fromHtml(context, firstEntry.getText());
-            if (!firstEntry.getPhotos().isEmpty()) {
-                StreamItemPhotoEntry firstPhoto = firstEntry.getPhotos().get(0);
-                photoUri = firstPhoto.getPhotoUri();
-
-                // If displaying an image, hide the snippet text.
-                snippet = null;
-            }
-        }
         setDataOrHideIfNone(snippet, statusView);
         if (photoUri != null) {
             ContactPhotoManager.getInstance(context).loadPhoto(

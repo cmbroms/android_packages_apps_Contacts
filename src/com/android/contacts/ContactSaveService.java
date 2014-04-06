@@ -40,6 +40,7 @@ import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.Groups;
+import android.provider.ContactsContract.PinnedPositions;
 import android.provider.ContactsContract.Profile;
 import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.RawContactsEntity;
@@ -48,9 +49,9 @@ import android.widget.Toast;
 
 import com.android.contacts.common.database.ContactUpdateUtils;
 import com.android.contacts.common.model.AccountTypeManager;
-import com.android.contacts.model.RawContactDelta;
-import com.android.contacts.model.RawContactDeltaList;
-import com.android.contacts.model.RawContactModifier;
+import com.android.contacts.common.model.RawContactDelta;
+import com.android.contacts.common.model.RawContactDeltaList;
+import com.android.contacts.common.model.RawContactModifier;
 import com.android.contacts.common.model.account.AccountWithDataSet;
 import com.android.contacts.util.CallerInfoCacheUtils;
 import com.android.contacts.util.ContactPhotoUtils;
@@ -811,6 +812,24 @@ public class ContactSaveService extends IntentService {
         final ContentValues values = new ContentValues(1);
         values.put(Contacts.STARRED, value);
         getContentResolver().update(contactUri, values, null, null);
+
+        // Undemote the contact if necessary
+        final Cursor c = getContentResolver().query(contactUri, new String[] {Contacts._ID},
+                null, null, null);
+        try {
+            if (c.moveToFirst()) {
+                final long id = c.getLong(0);
+
+                // Don't bother undemoting if this contact is the user's profile.
+                if (id < Profile.MIN_ID) {
+                    values.clear();
+                    values.put(String.valueOf(id), PinnedPositions.UNDEMOTE);
+                    getContentResolver().update(PinnedPositions.UPDATE_URI, values, null, null);
+                }
+            }
+        } finally {
+            c.close();
+        }
     }
 
     /**

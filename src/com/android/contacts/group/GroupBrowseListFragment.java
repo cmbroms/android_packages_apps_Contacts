@@ -42,10 +42,10 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.android.contacts.ContactsUtils;
 import com.android.contacts.GroupListLoader;
 import com.android.contacts.R;
 import com.android.contacts.group.GroupBrowseListAdapter.GroupListItemViewCache;
+import com.android.contacts.common.ContactsUtils;
 import com.android.contacts.common.list.AutoScrollListView;
 
 /**
@@ -130,6 +130,8 @@ public class GroupBrowseListFragment extends Fragment
         });
 
         mListView.setEmptyView(mEmptyView);
+        configureVerticalScrollbar();
+
         mAddAccountsView = mRootView.findViewById(R.id.add_accounts);
         mAddAccountButton = mRootView.findViewById(R.id.add_account_button);
         mAddAccountButton.setOnClickListener(new OnClickListener() {
@@ -148,8 +150,8 @@ public class GroupBrowseListFragment extends Fragment
     }
 
     public void setVerticalScrollbarPosition(int position) {
-        if (mVerticalScrollbarPosition != position) {
-            mVerticalScrollbarPosition = position;
+        mVerticalScrollbarPosition = position;
+        if (mListView != null) {
             configureVerticalScrollbar();
         }
     }

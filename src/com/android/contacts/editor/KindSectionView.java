@@ -28,8 +28,8 @@ import android.widget.TextView;
 
 import com.android.contacts.R;
 import com.android.contacts.editor.Editor.EditorListener;
-import com.android.contacts.model.RawContactModifier;
-import com.android.contacts.model.RawContactDelta;
+import com.android.contacts.common.model.RawContactModifier;
+import com.android.contacts.common.model.RawContactDelta;
 import com.android.contacts.common.model.ValuesDelta;
 import com.android.contacts.common.model.dataitem.DataKind;
 
@@ -113,16 +113,12 @@ public class KindSectionView extends LinearLayout implements EditorListener {
     public void onDeleteRequested(Editor editor) {
         // If there is only 1 editor in the section, then don't allow the user to delete it.
         // Just clear the fields in the editor.
-        final boolean animate;
         if (getEditorCount() == 1) {
             editor.clearAllFields();
-            animate = true;
         } else {
             // Otherwise it's okay to delete this {@link Editor}
             editor.deleteEditor();
-            animate = false;
         }
-        updateAddFooterVisible(animate);
     }
 
     @Override
@@ -132,11 +128,6 @@ public class KindSectionView extends LinearLayout implements EditorListener {
         if (request == FIELD_TURNED_EMPTY || request == FIELD_TURNED_NON_EMPTY) {
             updateAddFooterVisible(true);
         }
-    }
-
-    @Override
-    public void onDismissPopup() {
-        // Nothing to do.
     }
 
     public void setState(DataKind kind, RawContactDelta state, boolean readOnly, ViewIdGenerator vig) {
