@@ -16,7 +16,6 @@
 
 package com.android.contacts.quickcontact;
 
-import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
@@ -30,18 +29,18 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.android.contacts.common.CallUtil;
-import com.android.contacts.common.ContactsUtils;
+import com.android.contacts.ContactsUtils;
 import com.android.contacts.R;
 import com.android.contacts.common.MoreContactUtils;
 import com.android.contacts.common.model.account.AccountType.EditType;
-import com.android.contacts.common.model.dataitem.DataItem;
+import com.android.contacts.model.dataitem.DataItem;
 import com.android.contacts.common.model.dataitem.DataKind;
-import com.android.contacts.common.model.dataitem.EmailDataItem;
-import com.android.contacts.common.model.dataitem.ImDataItem;
-import com.android.contacts.common.model.dataitem.PhoneDataItem;
-import com.android.contacts.common.model.dataitem.SipAddressDataItem;
-import com.android.contacts.common.model.dataitem.StructuredPostalDataItem;
-import com.android.contacts.common.model.dataitem.WebsiteDataItem;
+import com.android.contacts.model.dataitem.EmailDataItem;
+import com.android.contacts.model.dataitem.ImDataItem;
+import com.android.contacts.model.dataitem.PhoneDataItem;
+import com.android.contacts.model.dataitem.SipAddressDataItem;
+import com.android.contacts.model.dataitem.StructuredPostalDataItem;
+import com.android.contacts.model.dataitem.WebsiteDataItem;
 import com.android.contacts.util.PhoneCapabilityTester;
 import com.android.contacts.util.StructuredPostalUtils;
 
@@ -103,8 +102,7 @@ public class DataAction implements Action {
         mDataUri = ContentUris.withAppendedId(Data.CONTENT_URI, mDataId);
 
         final boolean hasPhone = PhoneCapabilityTester.isPhone(mContext);
-        final ComponentName smsComponent = PhoneCapabilityTester.getSmsComponent(mContext);
-        final boolean hasSms = (smsComponent != null);
+        final boolean hasSms = PhoneCapabilityTester.isSmsIntentRegistered(mContext);
 
         // Handle well-known MIME-types with special care
         if (item instanceof PhoneDataItem) {
@@ -115,12 +113,8 @@ public class DataAction implements Action {
 
                     final Intent phoneIntent = hasPhone ? CallUtil.getCallIntent(number)
                             : null;
-                    Intent smsIntent = null;
-                    if (hasSms) {
-                        smsIntent = new Intent(Intent.ACTION_SENDTO,
-                                Uri.fromParts(CallUtil.SCHEME_SMSTO, number, null));
-                        smsIntent.setComponent(smsComponent);
-                    }
+                    final Intent smsIntent = hasSms ? new Intent(Intent.ACTION_SENDTO,
+                            Uri.fromParts(CallUtil.SCHEME_SMSTO, number, null)) : null;
 
                     // Configure Icons and Intents. Notice actionIcon is already set to the phone
                     if (hasPhone && hasSms) {

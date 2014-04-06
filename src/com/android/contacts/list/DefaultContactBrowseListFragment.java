@@ -15,7 +15,6 @@
  */
 package com.android.contacts.list;
 
-import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.database.Cursor;
@@ -36,7 +35,6 @@ import com.android.contacts.R;
 import com.android.contacts.common.list.ContactListAdapter;
 import com.android.contacts.common.list.ContactListFilter;
 import com.android.contacts.common.list.ContactListFilterController;
-import com.android.contacts.common.list.ContactListItemView;
 import com.android.contacts.common.list.DefaultContactListAdapter;
 import com.android.contacts.common.list.ProfileAndContactsLoader;
 import com.android.contacts.editor.ContactEditorFragment;
@@ -80,8 +78,8 @@ public class DefaultContactBrowseListFragment extends ContactBrowseListFragment 
     }
 
     @Override
-    public CursorLoader createCursorLoader(Context context) {
-        return new ProfileAndContactsLoader(context);
+    public CursorLoader createCursorLoader() {
+        return new ProfileAndContactsLoader(getActivity());
     }
 
     @Override
@@ -93,12 +91,7 @@ public class DefaultContactBrowseListFragment extends ContactBrowseListFragment 
     protected ContactListAdapter createListAdapter() {
         DefaultContactListAdapter adapter = new DefaultContactListAdapter(getContext());
         adapter.setSectionHeaderDisplayEnabled(isSectionHeaderDisplayEnabled());
-        boolean showPhoto = getResources().getBoolean(R.bool.config_browse_list_show_images);
-        adapter.setDisplayPhotos(showPhoto);
-        if (showPhoto) {
-            boolean reverse = getResources().getBoolean(R.bool.config_browse_list_reverse_images);
-            adapter.setPhotoPosition(ContactListItemView.getDefaultPhotoPosition(reverse));
-        }
+        adapter.setDisplayPhotos(getResources().getBoolean(R.bool.config_browse_list_show_images));
         return adapter;
     }
 
@@ -285,6 +278,7 @@ public class DefaultContactBrowseListFragment extends ContactBrowseListFragment 
         mProfileHeader = inflater.inflate(R.layout.user_profile_header, null, false);
         mCounterHeaderView = (TextView) mProfileHeader.findViewById(R.id.contacts_count);
         mProfileTitle = (TextView) mProfileHeader.findViewById(R.id.profile_title);
+        mProfileTitle.setAllCaps(true);
         mProfileHeaderContainer.addView(mProfileHeader);
         list.addHeaderView(mProfileHeaderContainer, null, false);
 

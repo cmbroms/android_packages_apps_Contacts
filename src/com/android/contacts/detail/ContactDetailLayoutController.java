@@ -37,7 +37,7 @@ import android.widget.AbsListView.OnScrollListener;
 import com.android.contacts.NfcHandler;
 import com.android.contacts.R;
 import com.android.contacts.activities.ContactDetailActivity.FragmentKeyListener;
-import com.android.contacts.common.model.Contact;
+import com.android.contacts.model.Contact;
 import com.android.contacts.util.PhoneCapabilityTester;
 import com.android.contacts.common.util.UriUtils;
 import com.android.contacts.widget.FrameLayoutWithOverlay;
@@ -285,6 +285,7 @@ public class ContactDetailLayoutController {
                     !UriUtils.areEqual(mContactData.getLookupUri(), data.getLookupUri());
         }
         mContactData = data;
+        mContactHasUpdates = !data.getStreamItems().isEmpty();
 
         if (PhoneCapabilityTester.isUsingTwoPanes(mActivity)) {
             // Tablet: If we already showed data before, we want to cross-fade from screen to screen
@@ -301,7 +302,12 @@ public class ContactDetailLayoutController {
             }
         }
 
-        showContactWithoutUpdates();
+        if (mContactHasUpdates) {
+            showContactWithUpdates(
+                    contactWasLoaded && contactHadUpdates == false);
+        } else {
+            showContactWithoutUpdates();
+        }
     }
 
     public void showEmptyState() {

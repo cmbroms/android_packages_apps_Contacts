@@ -22,7 +22,6 @@ import android.view.View;
 
 import com.android.contacts.util.StreamItemEntry;
 import com.android.contacts.util.StreamItemEntryBuilder;
-
 import com.google.common.collect.Lists;
 
 import java.util.ArrayList;

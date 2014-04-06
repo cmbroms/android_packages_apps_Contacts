@@ -19,7 +19,6 @@ package com.android.contacts.detail;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.SearchManager;
-import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
@@ -31,6 +30,8 @@ import android.net.Uri;
 import android.net.WebAddress;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.provider.CalendarContract;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Email;
@@ -42,7 +43,6 @@ import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.Directory;
 import android.provider.ContactsContract.DisplayNameSources;
 import android.provider.ContactsContract.StatusUpdates;
-import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -70,14 +70,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.android.contacts.ContactSaveService;
+import com.android.contacts.ContactsUtils;
+import com.android.contacts.GroupMetaData;
 import com.android.contacts.R;
 import com.android.contacts.TypePrecedence;
 import com.android.contacts.activities.ContactDetailActivity.FragmentKeyListener;
 import com.android.contacts.common.CallUtil;
 import com.android.contacts.common.ClipboardUtils;
 import com.android.contacts.common.Collapser;
-import com.android.contacts.common.ContactsUtils;
-import com.android.contacts.common.GroupMetaData;
 import com.android.contacts.common.Collapser.Collapsible;
 import com.android.contacts.common.ContactPresenceIconUtil;
 import com.android.contacts.common.GeoUtil;
@@ -90,31 +90,31 @@ import com.android.contacts.common.model.account.AccountType.EditType;
 import com.android.contacts.common.model.account.AccountWithDataSet;
 import com.android.contacts.common.model.dataitem.DataKind;
 import com.android.contacts.common.util.AccountsListAdapter.AccountListFilter;
-import com.android.contacts.common.util.ContactDisplayUtils;
-import com.android.contacts.common.util.DataStatus;
-import com.android.contacts.common.util.DateUtils;
-import com.android.contacts.common.model.Contact;
-import com.android.contacts.common.model.RawContact;
-import com.android.contacts.common.model.RawContactDelta;
-import com.android.contacts.common.model.RawContactDeltaList;
-import com.android.contacts.common.model.RawContactModifier;
-import com.android.contacts.common.model.dataitem.DataItem;
-import com.android.contacts.common.model.dataitem.EmailDataItem;
-import com.android.contacts.common.model.dataitem.EventDataItem;
-import com.android.contacts.common.model.dataitem.GroupMembershipDataItem;
-import com.android.contacts.common.model.dataitem.ImDataItem;
-import com.android.contacts.common.model.dataitem.NicknameDataItem;
-import com.android.contacts.common.model.dataitem.NoteDataItem;
-import com.android.contacts.common.model.dataitem.OrganizationDataItem;
-import com.android.contacts.common.model.dataitem.PhoneDataItem;
-import com.android.contacts.common.model.dataitem.RelationDataItem;
-import com.android.contacts.common.model.dataitem.SipAddressDataItem;
-import com.android.contacts.common.model.dataitem.StructuredNameDataItem;
-import com.android.contacts.common.model.dataitem.StructuredPostalDataItem;
-import com.android.contacts.common.model.dataitem.WebsiteDataItem;
+import com.android.contacts.model.Contact;
+import com.android.contacts.model.RawContact;
+import com.android.contacts.model.RawContactDelta;
+import com.android.contacts.model.RawContactDeltaList;
+import com.android.contacts.model.RawContactModifier;
+import com.android.contacts.model.dataitem.DataItem;
+import com.android.contacts.model.dataitem.EmailDataItem;
+import com.android.contacts.model.dataitem.EventDataItem;
+import com.android.contacts.model.dataitem.GroupMembershipDataItem;
+import com.android.contacts.model.dataitem.ImDataItem;
+import com.android.contacts.model.dataitem.NicknameDataItem;
+import com.android.contacts.model.dataitem.NoteDataItem;
+import com.android.contacts.model.dataitem.OrganizationDataItem;
+import com.android.contacts.model.dataitem.PhoneDataItem;
+import com.android.contacts.model.dataitem.RelationDataItem;
+import com.android.contacts.model.dataitem.SipAddressDataItem;
+import com.android.contacts.model.dataitem.StructuredNameDataItem;
+import com.android.contacts.model.dataitem.StructuredPostalDataItem;
+import com.android.contacts.model.dataitem.WebsiteDataItem;
+import com.android.contacts.util.DataStatus;
+import com.android.contacts.util.DateUtils;
 import com.android.contacts.util.PhoneCapabilityTester;
 import com.android.contacts.util.StructuredPostalUtils;
 import com.android.contacts.util.UiClosables;
+import com.android.internal.telephony.ITelephony;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -161,6 +161,7 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
 
     private Button mQuickFixButton;
     private QuickFix mQuickFix;
+    private String mDefaultCountryIso;
     private boolean mContactHasSocialUpdates;
     private boolean mShowStaticPhoto = true;
 
@@ -168,6 +169,21 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
             new MakeLocalCopyQuickFix(),
             new AddToMyContactsQuickFix()
     };
+
+    /**
+     * Device capability: Set during buildEntries and used in the long-press context menu
+     */
+    private boolean mHasPhone;
+
+    /**
+     * Device capability: Set during buildEntries and used in the long-press context menu
+     */
+    private boolean mHasSms;
+
+    /**
+     * Device capability: Set during buildEntries and used in the long-press context menu
+     */
+    private boolean mHasSip;
 
     /**
      * The view shown if the detail list is empty.
@@ -274,6 +290,7 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         mContext = activity;
+        mDefaultCountryIso = GeoUtil.getCurrentCountryIso(mContext);
         mViewEntryDimensions = new ViewEntryDimensions(mContext.getResources());
     }
 
@@ -412,6 +429,9 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
             return;
         }
 
+        // Figure out if the contact has social updates or not
+        mContactHasSocialUpdates = !mContactData.getStreamItems().isEmpty();
+
         // Setup the photo if applicable
         if (mStaticPhotoContainer != null) {
             // The presence of a static photo container is not sufficient to determine whether or
@@ -516,10 +536,9 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
      * Build up the entries to display on the screen.
      */
     private final void buildEntries() {
-        final boolean hasPhone = PhoneCapabilityTester.isPhone(mContext);
-        final ComponentName smsComponent = PhoneCapabilityTester.getSmsComponent(getContext());
-        final boolean hasSms = (smsComponent != null);
-        final boolean hasSip = PhoneCapabilityTester.isSipPhone(mContext);
+        mHasPhone = PhoneCapabilityTester.isPhone(mContext);
+        mHasSms = PhoneCapabilityTester.isSmsIntentRegistered(mContext);
+        mHasSip = PhoneCapabilityTester.isSipPhone(mContext);
 
         // Clear out the old entries
         mAllEntries.clear();
@@ -567,25 +586,20 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
                     PhoneDataItem phone = (PhoneDataItem) dataItem;
                     // Build phone entries
                     entry.data = phone.getFormattedPhoneNumber();
-                    final Intent phoneIntent = hasPhone ?
+                    final Intent phoneIntent = mHasPhone ?
                             CallUtil.getCallIntent(entry.data) : null;
-                    Intent smsIntent = null;
-                    if (hasSms) {
-                        smsIntent = new Intent(Intent.ACTION_SENDTO,
-                                Uri.fromParts(CallUtil.SCHEME_SMSTO, entry.data, null));
-                        smsIntent.setComponent(smsComponent);
-                    }
+                    final Intent smsIntent = mHasSms ? new Intent(Intent.ACTION_SENDTO,
+                            Uri.fromParts(CallUtil.SCHEME_SMSTO, entry.data, null)) : null;
 
                     // Configure Icons and Intents.
-                    if (hasPhone && hasSms) {
+                    if (mHasPhone && mHasSms) {
                         entry.intent = phoneIntent;
                         entry.secondaryIntent = smsIntent;
                         entry.secondaryActionIcon = kind.iconAltRes;
-                        entry.secondaryActionDescription =
-                            ContactDisplayUtils.getSmsLabelResourceId(entry.type);
-                    } else if (hasPhone) {
+                        entry.secondaryActionDescription = kind.iconAltDescriptionRes;
+                    } else if (mHasPhone) {
                         entry.intent = phoneIntent;
-                    } else if (hasSms) {
+                    } else if (mHasSms) {
                         entry.intent = smsIntent;
                     } else {
                         entry.intent = null;
@@ -682,7 +696,7 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
                 } else if (dataItem instanceof SipAddressDataItem && hasData) {
                     // Build SipAddress entries
                     entry.uri = null;
-                    if (hasSip) {
+                    if (mHasSip) {
                         entry.intent = CallUtil.getCallIntent(
                                 Uri.fromParts(CallUtil.SCHEME_SIP, entry.data, null));
                     } else {
@@ -1499,7 +1513,9 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
         }
 
         private View getHeaderEntryView(View convertView, ViewGroup parent) {
-            final int desiredLayoutResourceId = R.layout.detail_header_contact_without_updates;
+            final int desiredLayoutResourceId = mContactHasSocialUpdates ?
+                    R.layout.detail_header_contact_with_updates :
+                    R.layout.detail_header_contact_without_updates;
             View result = null;
             HeaderViewCache viewCache = null;
 
@@ -1716,13 +1732,7 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
             String secondaryActionDescription = null;
             if (entry.secondaryActionIcon != -1) {
                 secondaryActionIcon = resources.getDrawable(entry.secondaryActionIcon);
-                if (ContactDisplayUtils.isCustomPhoneType(entry.type)) {
-                    secondaryActionDescription = resources.getString(
-                            entry.secondaryActionDescription, entry.typeString);
-                } else {
-                    secondaryActionDescription = resources.getString(
-                            entry.secondaryActionDescription);
-                }
+                secondaryActionDescription = resources.getString(entry.secondaryActionDescription);
             } else if ((entry.chatCapability & Im.CAPABILITY_HAS_CAMERA) != 0) {
                 secondaryActionIcon =
                         resources.getDrawable(R.drawable.sym_action_videochat_holo_light);
@@ -1964,12 +1974,15 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
     public boolean handleKeyDown(int keyCode) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_CALL: {
-                TelephonyManager telephonyManager =
-                    (TelephonyManager) getActivity().getSystemService(Context.TELEPHONY_SERVICE);
-                if (telephonyManager != null &&
-                        telephonyManager.getCallState() != TelephonyManager.CALL_STATE_IDLE) {
-                    // Skip out and let the key be handled at a higher level
-                    break;
+                try {
+                    ITelephony phone = ITelephony.Stub.asInterface(
+                            ServiceManager.checkService("phone"));
+                    if (phone != null && !phone.isIdle()) {
+                        // Skip out and let the key be handled at a higher level
+                        break;
+                    }
+                } catch (RemoteException re) {
+                    // Fall through and try to call the contact
                 }
 
                 int index = mListView.getSelectedItemPosition();
@@ -2035,7 +2048,7 @@ public class ContactDetailFragment extends Fragment implements FragmentKeyListen
                     rawContact.getDataItems(), GroupMembershipDataItem.class)) {
                 GroupMembershipDataItem groupMembership = (GroupMembershipDataItem) dataItem;
                 final Long groupId = groupMembership.getGroupRowId();
-                if (groupId != null && groupId == defaultGroupId) {
+                if (groupId == defaultGroupId) {
                     isInDefaultGroup = true;
                     break;
                 }

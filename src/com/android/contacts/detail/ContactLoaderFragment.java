@@ -44,8 +44,8 @@ import com.android.contacts.R;
 import com.android.contacts.activities.ContactDetailActivity.FragmentKeyListener;
 import com.android.contacts.common.list.ShortcutIntentBuilder;
 import com.android.contacts.common.list.ShortcutIntentBuilder.OnShortcutIntentCreatedListener;
-import com.android.contacts.common.model.Contact;
-import com.android.contacts.common.model.ContactLoader;
+import com.android.contacts.model.Contact;
+import com.android.contacts.model.ContactLoader;
 import com.android.contacts.util.PhoneCapabilityTester;
 import com.google.common.base.Objects;
 
@@ -186,8 +186,8 @@ public class ContactLoaderFragment extends Fragment implements FragmentKeyListen
         public Loader<Contact> onCreateLoader(int id, Bundle args) {
             Uri lookupUri = args.getParcelable(LOADER_ARG_CONTACT_URI);
             return new ContactLoader(mContext, lookupUri, true /* loadGroupMetaData */,
-                    true /* load invitable account types */, true /* postViewNotification */,
-                    true /* computeFormattedPhoneNumber */);
+                    true /* loadStreamItems */, true /* load invitable account types */,
+                    true /* postViewNotification */, true /* computeFormattedPhoneNumber */);
         }
 
         @Override
@@ -259,24 +259,16 @@ public class ContactLoaderFragment extends Fragment implements FragmentKeyListen
         }
 
         final MenuItem editMenu = menu.findItem(R.id.menu_edit);
-        if (editMenu != null) {
-            editMenu.setVisible(mOptionsMenuEditable);
-        }
+        editMenu.setVisible(mOptionsMenuEditable);
 
         final MenuItem deleteMenu = menu.findItem(R.id.menu_delete);
-        if (deleteMenu != null) {
-            deleteMenu.setVisible(mOptionsMenuEditable);
-        }
+        deleteMenu.setVisible(mOptionsMenuEditable);
 
         final MenuItem shareMenu = menu.findItem(R.id.menu_share);
-        if (shareMenu != null) {
-            shareMenu.setVisible(mOptionsMenuShareable);
-        }
+        shareMenu.setVisible(mOptionsMenuShareable);
 
         final MenuItem createContactShortcutMenu = menu.findItem(R.id.menu_create_contact_shortcut);
-        if (createContactShortcutMenu != null) {
-            createContactShortcutMenu.setVisible(mOptionsMenuCanCreateShortcut);
-        }
+        createContactShortcutMenu.setVisible(mOptionsMenuCanCreateShortcut);
     }
 
     public boolean isContactOptionsChangeEnabled() {
@@ -466,5 +458,19 @@ public class ContactLoaderFragment extends Fragment implements FragmentKeyListen
         Intent intent = ContactSaveService.createSetRingtone(
                 mContext, mLookupUri, mCustomRingtone);
         mContext.startService(intent);
+    }
+
+    /** Toggles whether to load stream items. Just for debugging */
+    public void toggleLoadStreamItems() {
+        Loader<Contact> loaderObj = getLoaderManager().getLoader(LOADER_DETAILS);
+        ContactLoader loader = (ContactLoader) loaderObj;
+        loader.setLoadStreamItems(!loader.getLoadStreamItems());
+    }
+
+    /** Returns whether to load stream items. Just for debugging */
+    public boolean getLoadStreamItems() {
+        Loader<Contact> loaderObj = getLoaderManager().getLoader(LOADER_DETAILS);
+        ContactLoader loader = (ContactLoader) loaderObj;
+        return loader != null && loader.getLoadStreamItems();
     }
 }

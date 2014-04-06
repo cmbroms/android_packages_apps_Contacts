@@ -24,8 +24,6 @@ import android.text.Html;
 import com.android.contacts.detail.ContactDetailDisplayUtils;
 import com.android.contacts.common.test.NeededForTesting;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -158,7 +156,6 @@ public class StreamItemEntry implements Comparable<StreamItemEntry> {
      *
      * We can't do this automatically in the getters, because it'll require a {@link Context}.
      */
-    @VisibleForTesting
     public void decodeHtml(Context context) {
         final Html.ImageGetter imageGetter = ContactDetailDisplayUtils.getImageGetter(context);
         if (mText != null) {
