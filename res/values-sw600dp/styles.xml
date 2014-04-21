@@ -60,7 +60,7 @@
         <item name="favorites_padding_bottom">0dip</item>
     </style>
 
-    <style name="ContactPickerTheme" parent="@style/PeopleTheme">
+    <style name="ContactPickerTheme" parent="@android:Theme.Holo.Dialog">
         <item name="android:windowSoftInputMode">adjustResize</item>
         <item name="android:listViewStyle">@style/ListViewStyle</item>
         <item name="list_item_height">?android:attr/listPreferredItemHeight</item>
@@ -102,7 +102,7 @@
         <item name="android:windowSoftInputMode">adjustUnspecified</item>
     </style>
 
-    <style name="ContactListFilterTheme" parent="@android:Theme.Holo.Light.Dialog">
+    <style name="ContactListFilterTheme" parent="@android:Theme.Holo.Dialog">
         <item name="android:windowCloseOnTouchOutside">true</item>
         <item name="android:listViewStyle">@style/ListViewStyle</item>
     </style>
@@ -122,7 +122,7 @@
         <item name="android:background">@android:color/transparent</item>
     </style>
 
-    <style name="NonPhoneDialogTheme" parent="@android:Theme.Holo.Light.Dialog">
+    <style name="NonPhoneDialogTheme" parent="@android:Theme.Holo.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
