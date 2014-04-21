@@ -60,7 +60,7 @@
         <item name="favorites_padding_bottom">0dip</item>
     </style>
 
-    <style name="ContactPickerTheme" parent="@android:Theme.Holo.Light.Dialog">
+    <style name="ContactPickerTheme" parent="@style/PeopleTheme">
         <item name="android:windowSoftInputMode">adjustResize</item>
         <item name="android:listViewStyle">@style/ListViewStyle</item>
         <item name="list_item_height">?android:attr/listPreferredItemHeight</item>
