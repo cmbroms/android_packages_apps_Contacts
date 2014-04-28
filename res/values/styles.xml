@@ -105,7 +105,7 @@
         <item name="android:src">@drawable/ic_overflow_menu</item>
     </style>
 
-    <style name="ContactsActionBarStyle" parent="@android:Widget.Holo.Light.ActionBar">
+    <style name="ContactsActionBarStyle" parent="@android:Widget.Holo.ActionBar">
         <item name="android:background">#222222</item>
         <item name="android:backgroundStacked">@drawable/ab_stacked_solid_inverse_holo</item>
         <item name="android:backgroundSplit">#222222</item>
@@ -127,7 +127,7 @@
         <item name="android:background">@drawable/action_bar_tab</item>
     </style>
 
-    <style name="ListViewDropdownStyle" parent="@android:style/Widget.ListView.DropDown">
+    <style name="ListViewDropdownStyle" parent="@android:style/Widget.Holo.ListView">
         <item name="android:listSelector">?android:attr/listChoiceBackgroundIndicator</item>
     </style>
 
