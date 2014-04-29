@@ -50,6 +50,6 @@
         android:ellipsize="end"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textSize="12sp"
-        android:textColor="#ffffffff" />
+        android:textColor="@color/people_app_theme_color" />
 
 </LinearLayout>
