@@ -23,7 +23,7 @@
     <color name="quickcontact_name_detail_background">#66000000</color>
 
     <!-- Color of the background of the contact detail and editor pages -->
-    <color name="background_primary">#020202</color>
+    <color name="background_primary">#ff000000</color>
 
     <color name="background_social_updates">#ff010101</color>
 
@@ -37,7 +37,7 @@
     <color name="detail_tab_carousel_tab_label_color">#EEEEEE</color>
 
     <!-- Color of the background of the action bar -->
-    <color name="action_bar_background">#0f0f0f</color>
+    <color name="action_bar_background">#ff222222</color>
 
     <!-- Color of the background of the action bar when highlighted (ie. pressed, focused) -->
     <color name="action_bar_background_highlight">#ababab</color>
