@@ -49,7 +49,7 @@ public class TransitionAnimationView extends FrameLayout {
         mMaskingView.setVisibility(View.INVISIBLE);
         mMaskingView.setLayoutParams(new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
-        mMaskingView.setBackgroundColor(Color.BLACK);
+        mMaskingView.setBackgroundColor(Color.WHITE);
         addView(mMaskingView);
     }
 
