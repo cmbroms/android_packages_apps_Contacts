@@ -42,6 +42,7 @@ import com.android.contacts.common.model.dataitem.PhoneDataItem;
 import com.android.contacts.common.model.dataitem.SipAddressDataItem;
 import com.android.contacts.common.model.dataitem.StructuredPostalDataItem;
 import com.android.contacts.common.model.dataitem.WebsiteDataItem;
+import com.android.contacts.detail.ContactDetailDisplayUtils;
 import com.android.contacts.util.PhoneCapabilityTester;
 import com.android.contacts.util.StructuredPostalUtils;
 
@@ -67,6 +68,7 @@ public class DataAction implements Action {
     private Uri mDataUri;
     private long mDataId;
     private boolean mIsPrimary;
+    private boolean mIsSecure = false;
 
     /**
      * Create an action from common {@link Data} elements.
@@ -120,6 +122,8 @@ public class DataAction implements Action {
                         smsIntent = new Intent(Intent.ACTION_SENDTO,
                                 Uri.fromParts(CallUtil.SCHEME_SMSTO, number, null));
                         smsIntent.setComponent(smsComponent);
+
+                        mIsSecure = ContactDetailDisplayUtils.hasActiveSession(mContext, number);
                     }
 
                     // Configure Icons and Intents. Notice actionIcon is already set to the phone
@@ -270,16 +274,24 @@ public class DataAction implements Action {
     }
 
     @Override
+    public Boolean isSecure() {
+        return mIsSecure;
+    }
+
+    @Override
     public Drawable getAlternateIcon() {
         if (mAlternateIconRes == 0) return null;
 
         final String resourcePackageName = mKind.resourcePackageName;
-        if (resourcePackageName == null) {
-            return mContext.getResources().getDrawable(mAlternateIconRes);
+        if (resourcePackageName != null) {
+            final PackageManager pm = mContext.getPackageManager();
+            Drawable dw = pm.getDrawable(resourcePackageName, mAlternateIconRes, null);
+            if (dw != null) {
+                return dw;
+            }
         }
 
-        final PackageManager pm = mContext.getPackageManager();
-        return pm.getDrawable(resourcePackageName, mAlternateIconRes, null);
+        return mContext.getResources().getDrawable(mAlternateIconRes);
     }
 
     @Override
