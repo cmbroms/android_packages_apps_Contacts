@@ -467,7 +467,7 @@
         </activity>
 
         <activity
-            android:name=".editor.MultiPickContactActivity"
+            android:name=".activities.MultiPickContactActivity"
             android:windowSoftInputMode="stateHidden|adjustResize"
             android:screenOrientation="nosensor"
             android:theme="@android:style/Theme.Holo"
