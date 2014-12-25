@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
  *
  * Not a Contribution.
  *
@@ -29,10 +29,8 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Bundle;
 import android.os.Message;
-import android.os.RemoteException;
-import android.os.ServiceManager;
 import android.provider.ContactsContract.RawContacts;
-import android.telephony.MSimTelephonyManager;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -44,17 +42,12 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.android.contacts.activities.PeopleActivity;
 import com.android.contacts.ContactsActivity;
 import com.android.contacts.common.model.account.AccountType;
 import com.android.contacts.common.model.account.AccountWithDataSet;
 import com.android.contacts.common.model.AccountTypeManager;
 import com.android.contacts.common.MoreContactUtils;
 import com.android.contacts.common.SimContactsConstants;
-import com.android.internal.telephony.IIccPhoneBook;
-import com.android.internal.telephony.msim.IIccPhoneBookMSim;
-import com.android.internal.telephony.uicc.AdnRecord;
-import com.android.internal.telephony.uicc.IccConstants;
 import com.android.contacts.R;
 import com.google.android.collect.Lists;
 
@@ -125,10 +118,7 @@ public class MemoryStatusActivity extends ContactsActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                Intent intent = new Intent(this, PeopleActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-                finish();
+                onBackPressed();
                 return true;
             default:
                 break;
@@ -177,7 +167,7 @@ public class MemoryStatusActivity extends ContactsActivity {
             int count = INVALID_COUNT;
             if (!TextUtils.isEmpty(account.type)) {
                 if (account.type.equals(SimContactsConstants.ACCOUNT_TYPE_SIM)) {
-                    total = getAdnCount(MoreContactUtils
+                    total = MoreContactUtils.getAdnCount(MoreContactUtils
                             .getSubscription(account.type, account.name));
                     if (total > 0) {
                         Cursor cursor = cr.query(RawContacts.CONTENT_URI, new String[] {
@@ -261,7 +251,8 @@ public class MemoryStatusActivity extends ContactsActivity {
                     accountTypes.getAccountType(filter.accountType, filter.dataSet);
             viewCache.accountName.setText(accountType.getDisplayLabel(accountContext)
                     + "<" + filter.accountName + ">");
-            viewCache.totally.setVisibility((filter.total != INVALID_COUNT) ? View.VISIBLE : View.GONE);
+            viewCache.totally.setVisibility((filter.total != INVALID_COUNT) ? View.VISIBLE
+                            : View.GONE);
             viewCache.count_total.setText(Integer.toString(filter.total));
             viewCache.count_cur.setText(Integer.toString(filter.count));
         }
@@ -282,51 +273,6 @@ public class MemoryStatusActivity extends ContactsActivity {
                 count_cur = (TextView) view.findViewById(R.id.count_cur);
                 totally = (LinearLayout) view.findViewById(R.id.totally);
             }
-        }
-    }
-
-    public static int getMSimCardMaxCount(int subscription) {
-        int count = INVALID_COUNT;
-        try {
-            IIccPhoneBookMSim iccIpb = IIccPhoneBookMSim.Stub.asInterface(
-                    ServiceManager.getService("simphonebook_msim"));
-            if (iccIpb != null) {
-                List<AdnRecord> list = iccIpb.getAdnRecordsInEf(IccConstants.EF_ADN, subscription);
-                if (null != list) {
-                    count = list.size();
-                }
-            }
-        } catch (RemoteException ex) {
-            Log.e(TAG, "Failed to IIccPhoneBookMSim", ex);
-        }
-        return count;
-    }
-
-    public static int getSimCardMaxCount() {
-        int count = INVALID_COUNT;
-        try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
-            if (iccIpb != null) {
-                List<AdnRecord> list = iccIpb.getAdnRecordsInEf(IccConstants.EF_ADN);
-                if (null != list) {
-                    count = list.size();
-                }
-            }
-        } catch (RemoteException ex) {
-            Log.e(TAG, "Failed to IIccPhoneBook", ex);
-        }
-        return count;
-    }
-
-    public static int getAdnCount(int sub) {
-        if (sub == SimContactsConstants.SUB_INVALID) {
-            return INVALID_COUNT;
-        }
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-            return getMSimCardMaxCount(sub);
-        } else {
-            return getSimCardMaxCount();
         }
     }
 }

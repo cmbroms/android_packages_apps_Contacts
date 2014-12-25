@@ -40,23 +40,16 @@ import android.provider.ContactsContract;
 import android.provider.ContactsContract.AggregationExceptions;
 import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import android.provider.ContactsContract.Contacts;
-import android.provider.ContactsContract.CommonDataKinds.Email;
-import android.provider.ContactsContract.CommonDataKinds.Nickname;
-import android.provider.ContactsContract.CommonDataKinds.Organization;
-import android.provider.ContactsContract.CommonDataKinds.Phone;
-import android.provider.ContactsContract.CommonDataKinds.Photo;
-import android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.Groups;
 import android.provider.ContactsContract.PinnedPositions;
 import android.provider.ContactsContract.Profile;
 import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.RawContactsEntity;
-import android.provider.Settings;
 import android.text.TextUtils;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
-import android.telephony.MSimTelephonyManager;
+import android.telephony.SubscriptionManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -69,12 +62,10 @@ import com.android.contacts.common.model.account.AccountWithDataSet;
 import com.android.contacts.common.SimContactsConstants;
 import com.android.contacts.common.SimContactsOperation;
 import com.android.contacts.common.MoreContactUtils;
-import com.android.contacts.util.CallerInfoCacheUtils;
 import com.android.contacts.util.ContactPhotoUtils;
 import com.android.internal.telephony.uicc.AdnRecord;
 import com.android.internal.telephony.uicc.IccConstants;
 import com.android.internal.telephony.IIccPhoneBook;
-import com.android.internal.telephony.msim.IIccPhoneBookMSim;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -164,7 +155,7 @@ public class ContactSaveService extends IntentService {
     );
 
     private static final int PERSIST_TRIES = 3;
-    private static int count = MSimTelephonyManager.getDefault().getPhoneCount();
+    private static int count = TelephonyManager.getDefault().getPhoneCount();
     private static int[] mSimMaxCount = new int[count];
 
     public static final int RESULT_UNCHANGED = 0;
@@ -191,9 +182,6 @@ public class ContactSaveService extends IntentService {
     // when device is in the "AirPlane" mode.
     public static final int RESULT_AIR_PLANE_MODE = 10;
     public static SimContactsOperation mSimContactsOperation;
-
-    // Maximum number of operations allowed in a batch between yield points is 500.
-    private static final int BLOCK_LENGTH = 499;
 
     public interface Listener {
         public void onServiceCompleted(Intent callbackIntent);
@@ -239,43 +227,31 @@ public class ContactSaveService extends IntentService {
         if (0 != mSimMaxCount[subscription]) {
             return mSimMaxCount[subscription];
         }
-
+        long[] subId = SubscriptionManager.getSubId(subscription);
         try {
-            IIccPhoneBookMSim iccIpb = IIccPhoneBookMSim.Stub.asInterface(
-                ServiceManager.getService("simphonebook_msim"));
+            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
+                ServiceManager.getService("simphonebook"));
+
             if (iccIpb != null) {
-                List<AdnRecord> list = iccIpb.getAdnRecordsInEf(IccConstants.EF_ADN, subscription);
-                if (null != list) {
-                    mSimMaxCount[subscription] = list.size();
+                if (subId != null 
+                        && TelephonyManager.getDefault().isMultiSimEnabled()) {
+                    List<AdnRecord> list = iccIpb.getAdnRecordsInEfForSubscriber(
+                            subId[0], IccConstants.EF_ADN);
+                    if (null != list) {
+                        mSimMaxCount[subscription] = list.size();
+                    }
+                } else {
+                    List<AdnRecord> list = iccIpb
+                            .getAdnRecordsInEf(IccConstants.EF_ADN);
+                    if (null != list) {
+                        mSimMaxCount[subscription] = list.size();
+                    }
                 }
             }
         } catch (RemoteException ex) {
             Log.e(TAG, "Failed to IIccPhoneBookMSim", ex);
         }
         return mSimMaxCount[subscription];
-    }
-
-    /**
-     * when isMultiSimEnabled is false,get the maximum how many contacts can save to sim card
-     */
-    private int getSimCardMaxCount() {
-        if (0 != mSimMaxCount[SimContactsConstants.SUB_1]) {
-            return mSimMaxCount[SimContactsConstants.SUB_1];
-        }
-
-        try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                ServiceManager.getService("simphonebook"));
-            if (iccIpb != null) {
-                List<AdnRecord> list = iccIpb.getAdnRecordsInEf(IccConstants.EF_ADN);
-                if (null != list) {
-                    mSimMaxCount[SimContactsConstants.SUB_1] = list.size();
-                }
-            }
-        } catch (RemoteException ex) {
-            Log.e(TAG, "Failed to IIccPhoneBook", ex);
-        }
-        return mSimMaxCount[SimContactsConstants.SUB_1];
     }
 
     @Override
@@ -285,10 +261,8 @@ public class ContactSaveService extends IntentService {
         String action = intent.getAction();
         if (ACTION_NEW_RAW_CONTACT.equals(action)) {
             createRawContact(intent);
-            CallerInfoCacheUtils.sendUpdateCallerInfoCacheIntent(this);
         } else if (ACTION_SAVE_CONTACT.equals(action)) {
             saveContact(intent);
-            CallerInfoCacheUtils.sendUpdateCallerInfoCacheIntent(this);
         } else if (ACTION_CREATE_GROUP.equals(action)) {
             createGroup(intent);
         } else if (ACTION_RENAME_GROUP.equals(action)) {
@@ -305,16 +279,12 @@ public class ContactSaveService extends IntentService {
             clearPrimary(intent);
         } else if (ACTION_DELETE_CONTACT.equals(action)) {
             deleteContact(intent);
-            CallerInfoCacheUtils.sendUpdateCallerInfoCacheIntent(this);
         } else if (ACTION_JOIN_CONTACTS.equals(action)) {
             joinContacts(intent);
-            CallerInfoCacheUtils.sendUpdateCallerInfoCacheIntent(this);
         } else if (ACTION_SET_SEND_TO_VOICEMAIL.equals(action)) {
             setSendToVoicemail(intent);
-            CallerInfoCacheUtils.sendUpdateCallerInfoCacheIntent(this);
         } else if (ACTION_SET_RINGTONE.equals(action)) {
             setRingtone(intent);
-            CallerInfoCacheUtils.sendUpdateCallerInfoCacheIntent(this);
         }
     }
 
@@ -535,13 +505,11 @@ public class ContactSaveService extends IntentService {
                 // Something went wrong, bail without success
                 Log.e(TAG, "Problem persisting user edits", e);
                 break;
-
             } catch (IllegalArgumentException e) {
                 // This is thrown by applyBatch on malformed requests
                 Log.e(TAG, "Problem persisting user edits", e);
                 showToast(R.string.contactSavedErrorToast);
                 break;
-
             } catch (SQLiteFullException e) {
                 // Memory is full. don't do any thing
                 Log.e(TAG, "Memory is full", e);
@@ -553,7 +521,6 @@ public class ContactSaveService extends IntentService {
                     deliverCallback(callbackIntent);
                 }
                 return;
-
             } catch (OperationApplicationException e) {
                 // Version consistency failed, re-parent change and try again
                 Log.w(TAG, "Version consistency failed, re-parenting: " + e.toString());
@@ -646,7 +613,7 @@ public class ContactSaveService extends IntentService {
         int subscription) {
         // Return Error code to indicate caller that device is in
         // the "AirPlane" mode and application can't access SIM card.
-        if (MoreContactUtils.isAPMOnAndSIMPowerDown(getApplicationContext())) {
+        if (MoreContactUtils.isAPMOnAndSIMPowerDown(this)) {
             return RESULT_AIR_PLANE_MODE;
         }
 
@@ -714,14 +681,8 @@ public class ContactSaveService extends IntentService {
         }
 
         if (!TextUtils.isEmpty(tag)) {
-            if (!hasChinese(tag)) {
-                if (tag.length() > MAX_EN_LENGTH) {
-                    return RESULT_TAG_FAILURE;
-                }
-            } else {
-                if (tag.length() > MAX_CH_LENGTH) {
-                    return RESULT_TAG_FAILURE;
-                }
+            if (tag.getBytes().length > MAX_EN_LENGTH) {
+                return RESULT_TAG_FAILURE;
             }
         }
 
@@ -729,11 +690,11 @@ public class ContactSaveService extends IntentService {
             int count = 0;
             Cursor c = null;
             Uri iccUri;
-            if (!MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-                iccUri = Uri.parse("content://icc/adn");
+            long[] subId = SubscriptionManager.getSubId(subscription);
+            if (!TelephonyManager.getDefault().isMultiSimEnabled()) {
+                iccUri = Uri.parse(SimContactsConstants.SIM_URI);
             } else {
-                iccUri = Uri.parse(subscription == SimContactsConstants.SUB_1 ? "content://iccmsim/adn"
-                        : "content://iccmsim/adn_sub2");
+                iccUri = Uri.parse(SimContactsConstants.SIM_SUB_URI + subId[0]);
             }
             try {
                 c = resolver.query(iccUri, null, null, null, null);
@@ -746,12 +707,8 @@ public class ContactSaveService extends IntentService {
                 }
             }
 
-            if (!MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-                if (count == getSimCardMaxCount())
-                    return RESULT_SIM_FULL_FAILURE;
-            } else {
-                if (count == getMSimCardMaxCount(subscription))
-                    return RESULT_SIM_FULL_FAILURE;
+            if (count == getMSimCardMaxCount(subscription)) {
+                return RESULT_SIM_FULL_FAILURE;
             }
         }
 
@@ -769,9 +726,6 @@ public class ContactSaveService extends IntentService {
         return result;
     }
 
-    private boolean hasChinese(String tag) {
-        return tag != null && tag.getBytes().length > tag.length();
-    }
      /**
      * Find the ID of an existing or newly-inserted raw-contact.  If none exists, return -1.
      */
@@ -1100,9 +1054,8 @@ public class ContactSaveService extends IntentService {
 
                 // Don't bother undemoting if this contact is the user's profile.
                 if (id < Profile.MIN_ID) {
-                    values.clear();
-                    values.put(String.valueOf(id), PinnedPositions.UNDEMOTE);
-                    getContentResolver().update(PinnedPositions.UPDATE_URI, values, null, null);
+                    getContentResolver().call(ContactsContract.AUTHORITY_URI,
+                            PinnedPositions.UNDEMOTE_METHOD, String.valueOf(id), null);
                 }
             }
         } finally {
@@ -1356,7 +1309,18 @@ public class ContactSaveService extends IntentService {
         }
 
         boolean success = false;
-        success = applyBatchByBlock(operations, resolver);
+        // Apply all aggregation exceptions as one batch
+        try {
+            resolver.applyBatch(ContactsContract.AUTHORITY, operations);
+            showToast(R.string.contactsJoinedMessage);
+            success = true;
+        } catch (RemoteException e) {
+            Log.e(TAG, "Failed to apply aggregation exception batch", e);
+            showToast(R.string.contactSavedErrorToast);
+        } catch (OperationApplicationException e) {
+            Log.e(TAG, "Failed to apply aggregation exception batch", e);
+            showToast(R.string.contactSavedErrorToast);
+        }
 
         Intent callbackIntent = intent.getParcelableExtra(EXTRA_CALLBACK_INTENT);
         if (success) {
@@ -1365,42 +1329,6 @@ public class ContactSaveService extends IntentService {
             callbackIntent.setData(uri);
         }
         deliverCallback(callbackIntent);
-    }
-
-    public boolean applyBatchByBlock(ArrayList<ContentProviderOperation> operations,
-            ContentResolver cr) {
-        boolean result = false;
-        final ArrayList<ContentProviderOperation> blockOperations
-                = new ArrayList<ContentProviderOperation>(BLOCK_LENGTH);
-        int blockNum = operations.size() / BLOCK_LENGTH;
-        for (int blockIndex = 0; blockIndex <= blockNum; blockIndex++) {
-            blockOperations.clear();
-            if (blockIndex == blockNum) {
-                for (int i = blockIndex * BLOCK_LENGTH; i < operations.size(); i++) {
-                    blockOperations.add(operations.get(i));
-                }
-            } else {
-                for (int i = blockIndex * BLOCK_LENGTH;
-                        i < (blockIndex + 1) * BLOCK_LENGTH; i++) {
-                    blockOperations.add(operations.get(i));
-                }
-            }
-            if (!blockOperations.isEmpty()) {
-                // Apply all aggregation exceptions as one batch
-                try {
-                    cr.applyBatch(ContactsContract.AUTHORITY, blockOperations);
-                    showToast(R.string.contactsJoinedMessage);
-                    result = true;
-                } catch (RemoteException e) {
-                    Log.e(TAG, "Failed to apply aggregation exception batch", e);
-                    showToast(R.string.contactSavedErrorToast);
-                } catch (OperationApplicationException e) {
-                    Log.e(TAG, "Failed to apply aggregation exception batch", e);
-                    showToast(R.string.contactSavedErrorToast);
-                }
-            }
-        }
-        return result;
     }
 
     /**

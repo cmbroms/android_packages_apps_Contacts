@@ -17,7 +17,6 @@
 package com.android.contacts.activities;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ComponentName;
@@ -31,14 +30,13 @@ import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Intents;
 import android.provider.ContactsContract.PhoneLookup;
 import android.provider.ContactsContract.RawContacts;
+import android.telecom.PhoneAccount;
 import android.util.Log;
 
-import com.android.contacts.common.CallUtil;
+import com.android.contacts.common.ContactsUtils;
 import com.android.contacts.ContactsActivity;
 import com.android.contacts.R;
 import com.android.contacts.util.NotifyingAsyncQueryHandler;
-
-import java.util.List;
 
 /**
  * Handle several edge cases around showing or possibly creating contacts in
@@ -122,13 +120,13 @@ public final class ShowOrCreateActivity extends ContactsActivity
         mCreateForce = intent.getBooleanExtra(Intents.EXTRA_FORCE_CREATE, false);
 
         // Handle specific query request
-        if (CallUtil.SCHEME_MAILTO.equals(scheme)) {
+        if (ContactsUtils.SCHEME_MAILTO.equals(scheme)) {
             mCreateExtras.putString(Intents.Insert.EMAIL, ssp);
 
             Uri uri = Uri.withAppendedPath(Email.CONTENT_FILTER_URI, Uri.encode(ssp));
             mQueryHandler.startQuery(QUERY_TOKEN, null, uri, CONTACTS_PROJECTION, null, null, null);
 
-        } else if (CallUtil.SCHEME_TEL.equals(scheme)) {
+        } else if (PhoneAccount.SCHEME_TEL.equals(scheme)) {
             mCreateExtras.putString(Intents.Insert.PHONE, ssp);
 
             Uri uri = Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI, ssp);
@@ -198,23 +196,9 @@ public final class ShowOrCreateActivity extends ContactsActivity
                 finish();
 
             } else {
-                if (isShowOrCreateActivityRunning()) {
-                    showDialog(CREATE_CONTACT_DIALOG);
-                }
+                showDialog(CREATE_CONTACT_DIALOG);
             }
         }
-    }
-
-    private boolean isShowOrCreateActivityRunning() {
-        ActivityManager am = (ActivityManager) getApplicationContext().getSystemService("activity");
-        List<ActivityManager.RunningTaskInfo> runningTasks = am.getRunningTasks(1);
-        if (runningTasks.size() > 0) {
-            if (runningTasks.get(0).topActivity.getClassName()
-                    .equals("com.android.contacts.activities.ShowOrCreateActivity")) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override

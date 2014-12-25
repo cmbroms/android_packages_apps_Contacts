@@ -23,7 +23,6 @@ import android.os.Parcelable;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
-import android.provider.ContactsContract.CommonDataKinds.LocalGroup;
 import android.provider.ContactsContract.CommonDataKinds.Organization;
 import android.provider.ContactsContract.CommonDataKinds.Photo;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
@@ -73,9 +72,7 @@ public class RawContactEditorView extends BaseRawContactEditorView {
     private static final String KEY_SUPER_INSTANCE_STATE = "superInstanceState";
 
     private LayoutInflater mInflater;
-    private static Context mContext;
-    // Used to limit length of name to avoid OutOfMemory.
-    private static final int NAME_LENGTH_LIMIT = 512;
+    private Context mContext;
 
     private StructuredNameEditorView mName;
     private PhoneticNameEditorView mPhoneticName;
@@ -206,8 +203,6 @@ public class RawContactEditorView extends BaseRawContactEditorView {
         return;
     }
 
-    private static boolean isMyLocalProfile = false;
-
     /**
      * Set the internal state for this view, given a current
      * {@link RawContactDelta} state and the {@link AccountType} that
@@ -218,7 +213,6 @@ public class RawContactEditorView extends BaseRawContactEditorView {
             boolean isProfile) {
 
         mState = state;
-        isMyLocalProfile = isProfile;
 
         // Remove any existing sections
         mFields.removeAllViews();
@@ -265,7 +259,7 @@ public class RawContactEditorView extends BaseRawContactEditorView {
             mAccountTypeTextView.setText(
                     mContext.getString(R.string.account_type_format, accountType));
         }
-        mAccountIcon.setImageDrawable(type.getDisplayIcon(mContext));
+        mAccountIcon.setImageDrawable(type.getDisplayIcon(mContext, state.getAccountName()));
 
         // Show photo editor when supported
         RawContactModifier.ensureKindExists(state, type, Photo.CONTENT_ITEM_TYPE);
@@ -295,12 +289,15 @@ public class RawContactEditorView extends BaseRawContactEditorView {
                 sub = SimContactsConstants.SUB_2;
             }
             if (!MoreContactUtils.canSaveAnr(sub)) {
-                for (ValuesDelta entry : mState
-                        .getMimeEntries(Phone.CONTENT_ITEM_TYPE)) {
-                    if (Phone.TYPE_HOME == entry.getAsLong(Phone.TYPE)) {
-                        mState.getMimeEntries(Phone.CONTENT_ITEM_TYPE).remove(
-                            entry);
-                        break;
+                ArrayList<ValuesDelta> phoneDelta = mState
+                        .getMimeEntries(Phone.CONTENT_ITEM_TYPE);
+                if (phoneDelta != null) {
+                    for (ValuesDelta entry : phoneDelta) {
+                        if (Phone.TYPE_HOME == entry.getAsLong(Phone.TYPE)) {
+                            mState.getMimeEntries(Phone.CONTENT_ITEM_TYPE)
+                                    .remove(entry);
+                            break;
+                        }
                     }
                 }
             }
@@ -326,8 +323,6 @@ public class RawContactEditorView extends BaseRawContactEditorView {
                 // Handle special case editor for structured name
                 final ValuesDelta primary = state.getPrimaryEntry(mimeType);
                 DataKind dataKind = type.getKindForMimetype(DataKind.PSEUDO_MIME_TYPE_DISPLAY_NAME);
-                // Limit the length of EditText to avoid OOM.
-                dataKind.maxLength = NAME_LENGTH_LIMIT;
                 mName.setValues(dataKind, primary, state, false, vig);
                 if (!(SimContactsConstants.ACCOUNT_TYPE_SIM).equals(type.accountType)) {
                     mPhoneticName.setValues(
@@ -573,10 +568,6 @@ public class RawContactEditorView extends BaseRawContactEditorView {
 
                 if (DataKind.PSEUDO_MIME_TYPE_PHONETIC_NAME.equals(kind.mimeType)
                         && mPhoneticName.getVisibility() == View.VISIBLE) {
-                    continue;
-                }
-
-                if (isMyLocalProfile && LocalGroup.CONTENT_ITEM_TYPE.equals(kind.mimeType)) {
                     continue;
                 }
 

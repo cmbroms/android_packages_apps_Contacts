@@ -14,14 +14,9 @@
      limitations under the License.
 -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/search"
-          android:title="@string/search_bar_hint"
-          android:icon="@drawable/magnifying_glass"
-          android:showAsAction="always"
-          android:actionViewClass="android.widget.SearchView" />
     <item android:id="@+id/done"
-          android:icon="@drawable/ic_menu_done_holo_light"
-          android:title="@string/action_done"
+          android:icon="@drawable/ic_done_wht_24dp"
+          android:title="@string/menu_done"
           android:showAsAction="always" />
     <item android:id="@+id/select_all_check"
           android:title="@string/select_all"

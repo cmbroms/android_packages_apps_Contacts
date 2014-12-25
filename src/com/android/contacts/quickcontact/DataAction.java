@@ -26,12 +26,13 @@ import android.net.Uri;
 import android.net.WebAddress;
 import android.provider.ContactsContract.CommonDataKinds.Im;
 import android.provider.ContactsContract.Data;
+import android.telecom.PhoneAccount;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.android.contacts.R;
 import com.android.contacts.common.CallUtil;
 import com.android.contacts.common.ContactsUtils;
-import com.android.contacts.R;
 import com.android.contacts.common.MoreContactUtils;
 import com.android.contacts.common.model.account.AccountType.EditType;
 import com.android.contacts.common.model.dataitem.DataItem;
@@ -42,7 +43,6 @@ import com.android.contacts.common.model.dataitem.PhoneDataItem;
 import com.android.contacts.common.model.dataitem.SipAddressDataItem;
 import com.android.contacts.common.model.dataitem.StructuredPostalDataItem;
 import com.android.contacts.common.model.dataitem.WebsiteDataItem;
-import com.android.contacts.detail.ContactDetailDisplayUtils;
 import com.android.contacts.util.PhoneCapabilityTester;
 import com.android.contacts.util.StructuredPostalUtils;
 
@@ -56,22 +56,21 @@ public class DataAction implements Action {
     private final Context mContext;
     private final DataKind mKind;
     private final String mMimeType;
+    private final Integer mTimesUsed;
+    private final Long mLastTimeUsed;
 
     private CharSequence mBody;
     private CharSequence mSubtitle;
     private Intent mIntent;
     private Intent mAlternateIntent;
-    private Intent m2AlternateIntent;
     private int mAlternateIconDescriptionRes;
-    private int m2AlternateIconDescriptionRes;
     private int mAlternateIconRes;
     private int mPresence = -1;
-    private int m2AlternateIconRes;
 
     private Uri mDataUri;
     private long mDataId;
     private boolean mIsPrimary;
-    private boolean mIsSecure = false;
+    private boolean mIsSuperPrimary;
 
     /**
      * Create an action from common {@link Data} elements.
@@ -80,6 +79,8 @@ public class DataAction implements Action {
         mContext = context;
         mKind = kind;
         mMimeType = item.getMimeType();
+        mTimesUsed = item.getTimesUsed();
+        mLastTimeUsed = item.getLastTimeUsed();
 
         // Determine type for subtitle
         mSubtitle = "";
@@ -101,7 +102,8 @@ public class DataAction implements Action {
             }
         }
 
-        mIsPrimary = item.isSuperPrimary();
+        mIsPrimary = item.isPrimary();
+        mIsSuperPrimary = item.isSuperPrimary();
         mBody = item.buildDataStringForDisplay(context, kind);
 
         mDataId = item.getId();
@@ -123,12 +125,9 @@ public class DataAction implements Action {
                     Intent smsIntent = null;
                     if (hasSms) {
                         smsIntent = new Intent(Intent.ACTION_SENDTO,
-                                Uri.fromParts(CallUtil.SCHEME_SMSTO, number, null));
+                                Uri.fromParts(ContactsUtils.SCHEME_SMSTO, number, null));
                         smsIntent.setComponent(smsComponent);
-
-                        mIsSecure = ContactDetailDisplayUtils.hasActiveSession(mContext, number);
                     }
-                    final Intent videocallIntent = getVTCallIntent(number);
 
                     // Configure Icons and Intents. Notice actionIcon is already set to the phone
                     if (hasPhone && hasSms) {
@@ -136,14 +135,8 @@ public class DataAction implements Action {
                         mAlternateIntent = smsIntent;
                         mAlternateIconRes = kind.iconAltRes;
                         mAlternateIconDescriptionRes = kind.iconAltDescriptionRes;
-                        m2AlternateIntent = videocallIntent;
-                        m2AlternateIconRes = R.drawable.ic_contact_quick_contact_call_video;
-                        m2AlternateIconDescriptionRes = R.string.video_chat;
                     } else if (hasPhone) {
                         mIntent = phoneIntent;
-                        m2AlternateIntent = videocallIntent;
-                        m2AlternateIconRes = R.drawable.ic_contact_quick_contact_call_video;
-                        m2AlternateIconDescriptionRes = R.string.video_chat;
                     } else if (hasSms) {
                         mIntent = smsIntent;
                     }
@@ -154,7 +147,7 @@ public class DataAction implements Action {
                 final SipAddressDataItem sip = (SipAddressDataItem) item;
                 final String address = sip.getSipAddress();
                 if (!TextUtils.isEmpty(address)) {
-                    final Uri callUri = Uri.fromParts(CallUtil.SCHEME_SIP, address, null);
+                    final Uri callUri = Uri.fromParts(PhoneAccount.SCHEME_SIP, address, null);
                     mIntent = CallUtil.getCallIntent(callUri);
                     // Note that this item will get a SIP-specific variant
                     // of the "call phone" icon, rather than the standard
@@ -168,7 +161,7 @@ public class DataAction implements Action {
             final EmailDataItem email = (EmailDataItem) item;
             final String address = email.getData();
             if (!TextUtils.isEmpty(address)) {
-                final Uri mailUri = Uri.fromParts(CallUtil.SCHEME_MAILTO, address, null);
+                final Uri mailUri = Uri.fromParts(ContactsUtils.SCHEME_MAILTO, address, null);
                 mIntent = new Intent(Intent.ACTION_SENDTO, mailUri);
             }
 
@@ -203,7 +196,7 @@ public class DataAction implements Action {
 
                 if (!TextUtils.isEmpty(host) && !TextUtils.isEmpty(data)) {
                     final String authority = host.toLowerCase();
-                    final Uri imUri = new Uri.Builder().scheme(CallUtil.SCHEME_IMTO).authority(
+                    final Uri imUri = new Uri.Builder().scheme(ContactsUtils.SCHEME_IMTO).authority(
                             authority).appendPath(data).build();
                     mIntent = new Intent(Intent.ACTION_SENDTO, imUri);
 
@@ -279,13 +272,13 @@ public class DataAction implements Action {
     }
 
     @Override
-    public Boolean isPrimary() {
+    public boolean isPrimary() {
         return mIsPrimary;
     }
 
     @Override
-    public Boolean isSecure() {
-        return mIsSecure;
+    public boolean isSuperPrimary() {
+        return mIsSuperPrimary;
     }
 
     @Override
@@ -293,33 +286,18 @@ public class DataAction implements Action {
         if (mAlternateIconRes == 0) return null;
 
         final String resourcePackageName = mKind.resourcePackageName;
-        if (resourcePackageName != null) {
-            final PackageManager pm = mContext.getPackageManager();
-            Drawable dw = pm.getDrawable(resourcePackageName, mAlternateIconRes, null);
-            if (dw != null) {
-                return dw;
-            }
+        if (resourcePackageName == null) {
+            return mContext.getResources().getDrawable(mAlternateIconRes);
         }
 
-        return mContext.getResources().getDrawable(mAlternateIconRes);
-    }
-
-    @Override
-    public Drawable get2AlternateIcon() {
-        if (m2AlternateIconRes == 0) return null;
-        return mContext.getResources().getDrawable(m2AlternateIconRes);
+        final PackageManager pm = mContext.getPackageManager();
+        return pm.getDrawable(resourcePackageName, mAlternateIconRes, null);
     }
 
     @Override
     public String getAlternateIconDescription() {
         if (mAlternateIconDescriptionRes == 0) return null;
         return mContext.getResources().getString(mAlternateIconDescriptionRes);
-    }
-
-    @Override
-    public String get2AlternateIconDescription() {
-        if (m2AlternateIconDescriptionRes == 0) return null;
-        return mContext.getResources().getString(m2AlternateIconDescriptionRes);
     }
 
     @Override
@@ -333,17 +311,12 @@ public class DataAction implements Action {
     }
 
     @Override
-    public Intent get2AlternateIntent() {
-        return m2AlternateIntent;
-    }
-
-    @Override
     public void collapseWith(Action other) {
         // No-op
     }
 
     @Override
-    public boolean shouldCollapseWith(Action t) {
+    public boolean shouldCollapseWith(Action t, Context context) {
         if (t == null) {
             return false;
         }
@@ -361,22 +334,14 @@ public class DataAction implements Action {
         }
         return true;
     }
-    private Intent getVTCallIntent(String number) {
-        Intent intent = new Intent("com.borqs.videocall.action.LaunchVideoCallScreen");
-        intent.addCategory(Intent.CATEGORY_DEFAULT);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                                | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        intent.putExtra("IsCallOrAnswer", true); // true as a
-        // call,
-        // while
-        // false as
-        // answer
 
-        intent.putExtra("LaunchMode", 1); // nLaunchMode: 1 as
-        // telephony, while
-        // 0 as socket
-        intent.putExtra("call_number_key", number);
-        return intent;
+    @Override
+    public Integer getTimesUsed() {
+        return mTimesUsed;
     }
 
+    @Override
+    public Long getLastTimeUsed() {
+        return mLastTimeUsed;
+    }
 }

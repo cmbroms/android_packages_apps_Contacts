@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
-
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,9 +20,7 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.provider.ContactsContract.CommonDataKinds.LocalGroup;
 import android.text.Editable;
-import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -36,8 +34,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import com.android.contacts.editor.Editor.EditorListener;
-import com.android.contacts.editor.LocalGroupsSelector.OnGroupSelectListener;
+
 import com.android.contacts.R;
 import com.android.contacts.common.model.RawContactDelta;
 import com.android.contacts.common.ContactsUtils;
@@ -55,13 +52,14 @@ public class TextFieldsEditorView extends LabeledEditorView {
     private static final String TAG = TextFieldsEditorView.class.getSimpleName();
 
     private EditText[] mFieldEditTexts = null;
-    private LocalGroupsSelector[] localGroupsSelectors = null;
     private ViewGroup mFields = null;
     private View mExpansionViewContainer;
     private ImageView mExpansionView;
     private boolean mHideOptional = true;
     private boolean mHasShortAndLongForms;
     private int mMinFieldHeight;
+    private int mEditTextTopPadding;
+    private int mEditTextBottomPadding;
     private int mPreviousViewHeight;
 
     public TextFieldsEditorView(Context context) {
@@ -86,6 +84,10 @@ public class TextFieldsEditorView extends LabeledEditorView {
 
         mMinFieldHeight = mContext.getResources().getDimensionPixelSize(
                 R.dimen.editor_min_line_item_height);
+        mEditTextBottomPadding = mContext.getResources().getDimensionPixelSize(
+                R.dimen.editor_text_field_bottom_padding);
+        mEditTextTopPadding = mContext.getResources().getDimensionPixelSize(
+                R.dimen.editor_text_field_top_padding);
         mFields = (ViewGroup) findViewById(R.id.editors);
         mExpansionView = (ImageView) findViewById(R.id.expansion_view);
         mExpansionViewContainer = findViewById(R.id.expansion_view_container);
@@ -191,118 +193,89 @@ public class TextFieldsEditorView extends LabeledEditorView {
             for (EditText fieldEditText : mFieldEditTexts) {
                 mFields.removeView(fieldEditText);
             }
-            mFieldEditTexts = null;
-        }
-        if (localGroupsSelectors != null) {
-            for (View view : localGroupsSelectors) {
-                mFields.removeView(view);
-            }
-            localGroupsSelectors = null;
         }
         boolean hidePossible = false;
 
         int fieldCount = kind.fieldList.size();
-        if (LocalGroup.CONTENT_ITEM_TYPE.equals(kind.mimeType)) {
-            localGroupsSelectors = new LocalGroupsSelector[fieldCount];
-        } else {
-            mFieldEditTexts = new EditText[fieldCount];
-        }
-
+        mFieldEditTexts = new EditText[fieldCount];
         for (int index = 0; index < fieldCount; index++) {
             final EditField field = kind.fieldList.get(index);
-            if (LocalGroup.CONTENT_ITEM_TYPE.equals(kind.mimeType)) {
-                final LocalGroupsSelector localGroupsSelector = new LocalGroupsSelector(
-                    mContext, entry, field.column);
-                localGroupsSelector.setOnGroupSelectListener(new OnGroupSelectListener() {
-                    @Override
-                    public void onGroupChanged() {
-                        setDeleteButtonVisible(localGroupsSelector.getGroupId() > -1);
-                    }});
-                // Show the delete button if we have a non-null value
-                setDeleteButtonVisible(localGroupsSelector.getGroupId() > -1);
-                localGroupsSelectors[index] = localGroupsSelector;
-                mFields.addView(localGroupsSelector);
+            final EditText fieldView = new EditText(mContext);
+            fieldView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                    LayoutParams.WRAP_CONTENT));
+            // Set either a minimum line requirement or a minimum height (because {@link TextView}
+            // only takes one or the other at a single time).
+            if (field.minLines != 0) {
+                fieldView.setMinLines(field.minLines);
             } else {
-                final EditText fieldView = new EditText(mContext);
-                fieldView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-                        field.isMultiLine() ? LayoutParams.WRAP_CONTENT : mMinFieldHeight));
-                // Set the max length of EditText if user provide a value more
-                // than zero.
-                if (kind.maxLength > 0) {
-                    fieldView.setFilters(new InputFilter[] {
-                            new InputFilter.LengthFilter(kind.maxLength)});
-                }
-                // Set either a minimum line requirement or a minimum height (because
-                // {@link TextView} only takes one or the other at a single time).
-                if (field.minLines != 0) {
-                    fieldView.setMinLines(field.minLines);
-                } else {
-                    fieldView.setMinHeight(mMinFieldHeight);
-                }
-                fieldView.setTextAppearance(getContext(), android.R.style.TextAppearance_Medium);
-                fieldView.setGravity(Gravity.TOP);
-                mFieldEditTexts[index] = fieldView;
-                fieldView.setId(vig.getId(state, kind, entry, index));
-                if (field.titleRes > 0) {
-                    fieldView.setHint(field.titleRes);
-                }
-                int inputType = field.inputType;
-                fieldView.setInputType(inputType);
-                if (inputType == InputType.TYPE_CLASS_PHONE) {
-                    PhoneNumberFormatter.setPhoneNumberFormattingTextWatcher(mContext, fieldView);
-                    fieldView.setTextDirection(View.TEXT_DIRECTION_LTR);
-                }
-
-                // Show the "next" button in IME to navigate between text fields
-                // TODO: Still need to properly navigate to/from sections without text fields,
-                // See Bug: 5713510
-                fieldView.setImeOptions(EditorInfo.IME_ACTION_NEXT);
-
-                // Read current value from state
-                final String column = field.column;
-                final String value = entry.getAsString(column);
-                fieldView.setText(value);
-
-                // Show the delete button if we have a non-null value
-                setDeleteButtonVisible(value != null);
-
-                // Prepare listener for writing changes
-                fieldView.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        // Trigger event for newly changed value
-                        onFieldChanged(column, s.toString());
-                    }
-
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                    }
-
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    }
-                });
-
-                fieldView.setEnabled(isEnabled() && !readOnly);
-
-                if (field.shortForm) {
-                    hidePossible = true;
-                    mHasShortAndLongForms = true;
-                    fieldView.setVisibility(mHideOptional ? View.VISIBLE : View.GONE);
-                } else if (field.longForm) {
-                    hidePossible = true;
-                    mHasShortAndLongForms = true;
-                    fieldView.setVisibility(mHideOptional ? View.GONE : View.VISIBLE);
-                } else {
-                    // Hide field when empty and optional value
-                    final boolean couldHide = (!ContactsUtils.isGraphic(value) && field.optional);
-                    final boolean willHide = (mHideOptional && couldHide);
-                    fieldView.setVisibility(willHide ? View.GONE : View.VISIBLE);
-                    hidePossible = hidePossible || couldHide;
-                }
-
-                mFields.addView(fieldView);
+                fieldView.setMinHeight(mMinFieldHeight);
             }
+            fieldView.setTextAppearance(getContext(), android.R.style.TextAppearance_Medium);
+            fieldView.setPadding(fieldView.getPaddingLeft(), mEditTextTopPadding,
+                    fieldView.getPaddingRight(), mEditTextBottomPadding);
+            fieldView.setHintTextColor(R.color.secondary_text_color);
+            fieldView.setGravity(Gravity.TOP);
+            mFieldEditTexts[index] = fieldView;
+            fieldView.setId(vig.getId(state, kind, entry, index));
+            if (field.titleRes > 0) {
+                fieldView.setHint(field.titleRes);
+            }
+            int inputType = field.inputType;
+            fieldView.setInputType(inputType);
+            if (inputType == InputType.TYPE_CLASS_PHONE) {
+                PhoneNumberFormatter.setPhoneNumberFormattingTextWatcher(mContext, fieldView);
+                fieldView.setTextDirection(View.TEXT_DIRECTION_LTR);
+            }
+
+            // Show the "next" button in IME to navigate between text fields
+            // TODO: Still need to properly navigate to/from sections without text fields,
+            // See Bug: 5713510
+            fieldView.setImeOptions(EditorInfo.IME_ACTION_NEXT);
+
+            // Read current value from state
+            final String column = field.column;
+            final String value = entry.getAsString(column);
+            fieldView.setText(value);
+
+            // Show the delete button if we have a non-null value
+            setDeleteButtonVisible(value != null);
+
+            // Prepare listener for writing changes
+            fieldView.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void afterTextChanged(Editable s) {
+                    // Trigger event for newly changed value
+                    onFieldChanged(column, s.toString());
+                }
+
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                }
+            });
+
+            fieldView.setEnabled(isEnabled() && !readOnly);
+
+            if (field.shortForm) {
+                hidePossible = true;
+                mHasShortAndLongForms = true;
+                fieldView.setVisibility(mHideOptional ? View.VISIBLE : View.GONE);
+            } else if (field.longForm) {
+                hidePossible = true;
+                mHasShortAndLongForms = true;
+                fieldView.setVisibility(mHideOptional ? View.GONE : View.VISIBLE);
+            } else {
+                // Hide field when empty and optional value
+                final boolean couldHide = (!ContactsUtils.isGraphic(value) && field.optional);
+                final boolean willHide = (mHideOptional && couldHide);
+                fieldView.setVisibility(willHide ? View.GONE : View.VISIBLE);
+                hidePossible = hidePossible || couldHide;
+            }
+
+            mFields.addView(fieldView);
         }
 
         // When hiding fields, place expandable
@@ -313,17 +286,9 @@ public class TextFieldsEditorView extends LabeledEditorView {
     @Override
     public boolean isEmpty() {
         for (int i = 0; i < mFields.getChildCount(); i++) {
-            View editor = mFields.getChildAt(i);
-            if (editor instanceof EditText) {
-                EditText editText = (EditText) editor;
-                if (!TextUtils.isEmpty(editText.getText())) {
-                    return false;
-                }
-            } else if (editor instanceof LocalGroupsSelector) {
-                LocalGroupsSelector selector = (LocalGroupsSelector) editor;
-                if (selector.getGroupId() > -1) {
-                    return false;
-                }
+            EditText editText = (EditText) mFields.getChildAt(i);
+            if (!TextUtils.isEmpty(editText.getText())) {
+                return false;
             }
         }
         return true;
@@ -384,6 +349,7 @@ public class TextFieldsEditorView extends LabeledEditorView {
         super.onRestoreInstanceState(ss.getSuperState());
 
         mHideOptional = ss.mHideOptional;
+
         if (mFieldEditTexts != null) {
             int numChildren = Math.min(mFieldEditTexts.length, ss.mVisibilities.length);
             for (int i = 0; i < numChildren; i++) {
@@ -434,11 +400,6 @@ public class TextFieldsEditorView extends LabeledEditorView {
             for (EditText fieldEditText : mFieldEditTexts) {
                 // Update UI (which will trigger a state change through the {@link TextWatcher})
                 fieldEditText.setText("");
-            }
-        }
-        if (localGroupsSelectors != null) {
-            for (LocalGroupsSelector selector : localGroupsSelectors) {
-                selector.clear();
             }
         }
     }

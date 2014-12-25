@@ -16,22 +16,23 @@
 
 package com.android.contacts.util;
 
+import android.accounts.Account;
+import android.content.Context;
 import android.content.res.Resources;
-import android.content.res.Resources.NotFoundException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
-import android.provider.ContactsContract.DisplayNameSources;
+import android.media.ThumbnailUtils;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.ImageView;
 
 import com.android.contacts.common.ContactPhotoManager;
 import com.android.contacts.common.ContactPhotoManager.DefaultImageRequest;
 import com.android.contacts.common.lettertiles.LetterTileDrawable;
 import com.android.contacts.common.model.Contact;
+import com.android.contacts.common.model.RawContact;
 
 import java.util.Arrays;
 
@@ -55,9 +56,17 @@ public class ImageViewDrawableSetter {
     }
 
     public Bitmap setupContactPhoto(Contact contactData, ImageView photoView) {
+        Account account = null;
         mContact = contactData;
         setTarget(photoView);
-        return setCompressedImage(contactData.getPhotoBinaryData());
+        RawContact rawContact = contactData.getRawContacts().get(0);
+        final String accountType = rawContact.getAccountTypeString();
+        final String accountName = rawContact.getAccountName();
+        if (!TextUtils.isEmpty(accountType) && !TextUtils.isEmpty(accountName)) {
+            account = new Account(accountName, accountType);
+        }
+        return setCompressedImage(contactData.getPhotoBinaryData(),
+                photoView.getContext(), account);
     }
 
     public void setTransitionDuration(int durationInMillis) {
@@ -85,11 +94,13 @@ public class ImageViewDrawableSetter {
         return mCompressed;
     }
 
-    protected Bitmap setCompressedImage(byte[] compressed) {
+    protected Bitmap setCompressedImage(byte[] compressed, Context c, Account account) {
         if (mPreviousDrawable == null) {
             // If we don't already have a drawable, skip the exit-early test
             // below; otherwise we might not end up setting the default image.
-        } else if (mPreviousDrawable != null && Arrays.equals(mCompressed, compressed)) {
+        } else if (mPreviousDrawable != null
+                && mPreviousDrawable instanceof BitmapDrawable
+                && Arrays.equals(mCompressed, compressed)) {
             // TODO: the worst case is when the arrays are equal but not
             // identical. This takes about 1ms (more with high-res photos). A
             // possible optimization is to sparsely sample chunks of the arrays
@@ -98,7 +109,7 @@ public class ImageViewDrawableSetter {
         }
 
         final Drawable newDrawable = (compressed == null)
-                ? defaultDrawable()
+                ? defaultDrawable(c,account)
                 : decodedBitmapDrawable(compressed);
 
         // Remember this for next time, so that we can check if it changed.
@@ -139,7 +150,7 @@ public class ImageViewDrawableSetter {
      * retrieve a default drawable for this contact. If not, then use the name as the contact
      * identifier instead.
      */
-    private Drawable defaultDrawable() {
+    private Drawable defaultDrawable(Context c, Account account) {
         Resources resources = mTarget.getResources();
         DefaultImageRequest request;
         int contactType = ContactPhotoManager.TYPE_DEFAULT;
@@ -149,17 +160,24 @@ public class ImageViewDrawableSetter {
         }
 
         if (TextUtils.isEmpty(mContact.getLookupKey())) {
-            request = new DefaultImageRequest(null, mContact.getDisplayName(), contactType);
+            request = new DefaultImageRequest(null, mContact.getDisplayName(), contactType,
+                    false /* isCircular */);
         } else {
             request = new DefaultImageRequest(mContact.getDisplayName(), mContact.getLookupKey(),
-                    contactType);
+                    contactType, false /* isCircular */);
         }
-        return ContactPhotoManager.getDefaultAvatarDrawableForContact(resources, true, request);
+        return ContactPhotoManager.getDefaultAvatarDrawableForContact(
+                c, true, request, account);
     }
 
     private BitmapDrawable decodedBitmapDrawable(byte[] compressed) {
-        Resources rsrc = mTarget.getResources();
+        final Resources rsrc = mTarget.getResources();
         Bitmap bitmap = BitmapFactory.decodeByteArray(compressed, 0, compressed.length);
+        if (bitmap.getHeight() != bitmap.getWidth()) {
+            // Crop the bitmap into a square.
+            final int size = Math.min(bitmap.getWidth(), bitmap.getHeight());
+            bitmap = ThumbnailUtils.extractThumbnail(bitmap, size, size);
+        }
         return new BitmapDrawable(rsrc, bitmap);
     }
 }

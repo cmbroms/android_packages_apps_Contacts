@@ -413,6 +413,7 @@ public abstract class ContactBrowseListFragment extends
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+        super.onLoaderReset(loader);
     }
 
     private void checkSelection() {
@@ -597,29 +598,13 @@ public abstract class ContactBrowseListFragment extends
         mListener = listener;
     }
 
-    public void createNewContact() {
-        if (mListener != null) mListener.onCreateNewContactAction();
-    }
-
     public void viewContact(Uri contactUri) {
         setSelectedContactUri(contactUri, false, false, true, false);
         if (mListener != null) mListener.onViewContactAction(contactUri);
     }
 
-    public void editContact(Uri contactUri) {
-        if (mListener != null) mListener.onEditContactAction(contactUri);
-    }
-
     public void deleteContact(Uri contactUri) {
         if (mListener != null) mListener.onDeleteContactAction(contactUri);
-    }
-
-    public void addToFavorites(Uri contactUri) {
-        if (mListener != null) mListener.onAddToFavoritesAction(contactUri);
-    }
-
-    public void removeFromFavorites(Uri contactUri) {
-        if (mListener != null) mListener.onRemoveFromFavoritesAction(contactUri);
     }
 
     private void notifyInvalidSelection() {

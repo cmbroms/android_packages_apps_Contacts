@@ -15,6 +15,7 @@
  */
 package com.android.contacts.list;
 
+import android.accounts.Account;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.CursorLoader;
@@ -23,14 +24,15 @@ import android.net.Uri;
 import android.net.Uri.Builder;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.StructuredPostal;
-import android.provider.ContactsContract.ContactCounts;
 import android.provider.ContactsContract.Data;
+import android.provider.ContactsContract.RawContacts;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.android.contacts.common.ContactPhotoManager.DefaultImageRequest;
 import com.android.contacts.common.list.ContactEntryListAdapter;
 import com.android.contacts.common.list.ContactListItemView;
+import com.android.contacts.common.preference.ContactsPreferences;
 
 /**
  * A cursor adapter for the {@link StructuredPostal#CONTENT_TYPE} content type.
@@ -46,6 +48,8 @@ public class PostalAddressListAdapter extends ContactEntryListAdapter {
             StructuredPostal.PHOTO_ID,                  // 4
             StructuredPostal.LOOKUP_KEY,                // 5
             StructuredPostal.DISPLAY_NAME_PRIMARY,      // 6
+            RawContacts.ACCOUNT_TYPE,                   // 7
+            RawContacts.ACCOUNT_NAME                    // 8
         };
 
         private static final String[] PROJECTION_ALTERNATIVE = new String[] {
@@ -56,6 +60,8 @@ public class PostalAddressListAdapter extends ContactEntryListAdapter {
             StructuredPostal.PHOTO_ID,                  // 4
             StructuredPostal.LOOKUP_KEY,                // 5
             StructuredPostal.DISPLAY_NAME_ALTERNATIVE,  // 6
+            RawContacts.ACCOUNT_TYPE,                   // 7
+            RawContacts.ACCOUNT_NAME,                   // 8
         };
 
         public static final int POSTAL_ID           = 0;
@@ -65,6 +71,8 @@ public class PostalAddressListAdapter extends ContactEntryListAdapter {
         public static final int POSTAL_PHOTO_ID     = 4;
         public static final int POSTAL_LOOKUP_KEY   = 5;
         public static final int POSTAL_DISPLAY_NAME = 6;
+        public static final int POSTAL_ACCOUNT_TYPE  = 7;
+        public static final int POSTAL_ACCOUNT_NAME  = 8;
     }
 
     private final CharSequence mUnknownNameText;
@@ -80,17 +88,17 @@ public class PostalAddressListAdapter extends ContactEntryListAdapter {
         final Builder builder = StructuredPostal.CONTENT_URI.buildUpon()
                 .appendQueryParameter(ContactsContract.REMOVE_DUPLICATE_ENTRIES, "true");
         if (isSectionHeaderDisplayEnabled()) {
-            builder.appendQueryParameter(ContactCounts.ADDRESS_BOOK_INDEX_EXTRAS, "true");
+            builder.appendQueryParameter(StructuredPostal.EXTRA_ADDRESS_BOOK_INDEX, "true");
         }
         loader.setUri(builder.build());
 
-        if (getContactNameDisplayOrder() == ContactsContract.Preferences.DISPLAY_ORDER_PRIMARY) {
+        if (getContactNameDisplayOrder() == ContactsPreferences.DISPLAY_ORDER_PRIMARY) {
             loader.setProjection(PostalQuery.PROJECTION_PRIMARY);
         } else {
             loader.setProjection(PostalQuery.PROJECTION_ALTERNATIVE);
         }
 
-        if (getSortOrder() == ContactsContract.Preferences.SORT_ORDER_PRIMARY) {
+        if (getSortOrder() == ContactsPreferences.SORT_ORDER_PRIMARY) {
             loader.setSortOrder(StructuredPostal.SORT_KEY_PRIMARY);
         } else {
             loader.setSortOrder(StructuredPostal.SORT_KEY_ALTERNATIVE);
@@ -112,19 +120,22 @@ public class PostalAddressListAdapter extends ContactEntryListAdapter {
     }
 
     @Override
-    protected View newView(Context context, int partition, Cursor cursor, int position,
-            ViewGroup parent) {
-        final ContactListItemView view = new ContactListItemView(context, null);
+    protected ContactListItemView newView(
+            Context context, int partition, Cursor cursor, int position, ViewGroup parent) {
+        ContactListItemView view = super.newView(context, partition, cursor, position, parent);
         view.setUnknownNameText(mUnknownNameText);
         view.setQuickContactEnabled(isQuickContactEnabled());
+        view.setIsSectionHeaderEnabled(isSectionHeaderDisplayEnabled());
         return view;
     }
 
     @Override
     protected void bindView(View itemView, int partition, Cursor cursor, int position) {
+        super.bindView(itemView, partition, cursor, position);
         ContactListItemView view = (ContactListItemView)itemView;
         bindSectionHeaderAndDivider(view, position);
         bindName(view, cursor);
+        bindViewId(view, cursor, PostalQuery.POSTAL_ID);
         bindPhoto(view, cursor);
         bindPostalAddress(view, cursor);
     }
@@ -148,15 +159,7 @@ public class PostalAddressListAdapter extends ContactEntryListAdapter {
             String title = (String)getSections()[section];
             view.setSectionHeader(title);
         } else {
-            view.setDividerVisible(false);
             view.setSectionHeader(null);
-        }
-
-        // move the divider for the last item in a section
-        if (getPositionForSection(section + 1) - 1 == position) {
-            view.setDividerVisible(false);
-        } else {
-            view.setDividerVisible(true);
         }
     }
 
@@ -170,13 +173,22 @@ public class PostalAddressListAdapter extends ContactEntryListAdapter {
             photoId = cursor.getLong(PostalQuery.POSTAL_PHOTO_ID);
         }
 
+        Account account = null;
+        if (!cursor.isNull(PostalQuery.POSTAL_ACCOUNT_TYPE)
+                && !cursor.isNull(PostalQuery.POSTAL_ACCOUNT_NAME)) {
+            final String accountType = cursor.getString(PostalQuery.POSTAL_ACCOUNT_TYPE);
+            final String accountName = cursor.getString(PostalQuery.POSTAL_ACCOUNT_NAME);
+            account = new Account(accountName, accountType);
+        }
+
         DefaultImageRequest request = null;
         if (photoId == 0) {
             request = getDefaultImageRequestFromCursor(cursor, PostalQuery.POSTAL_DISPLAY_NAME,
                     PostalQuery.POSTAL_LOOKUP_KEY);
         }
 
-        getPhotoLoader().loadThumbnail(view.getPhotoView(), photoId, false, request);
+        getPhotoLoader().loadThumbnail(view.getPhotoView(), photoId, account, false, getCircularPhotos(),
+                request);
     }
 //
 //    protected void bindSearchSnippet(final ContactListItemView view, Cursor cursor) {
